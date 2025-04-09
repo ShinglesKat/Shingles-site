@@ -1,0 +1,19 @@
+body{
+    background-color: wheat;
+}
+
+header{
+
+}
+
+h1{
+
+}
+
+/* Minesweeper stuff */
+.minesweeper{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
