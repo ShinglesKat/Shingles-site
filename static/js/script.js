@@ -26,6 +26,8 @@ async function add_message(event){
 
         //clear form after submission
         document.getElementById('commentForm').reset();
+
+        document.getElementById("successMessage").style.display = "block";
         retrieve_messages();
 
     } catch (error) {
