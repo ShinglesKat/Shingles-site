@@ -1,4 +1,3 @@
-<!-- message.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,14 +9,13 @@
         <h1>Shingles Awesome Website</h1>
         <div class="topnav">
             <a class="active" href="/">Home</a>
-            <a class="active" href="message.html"> Leave a Message</a>
+            <a class="active" href="message.html">Leave a Message</a>
         </div>
     </header>
 
     <h2>Leave a Message</h2>
-    <!-- Nav bar -->
-    
-    <form id="commentForm">
+
+    <form id="commentForm" onsubmit="add_message(event)">
         <textarea id="nameInput" placeholder="Your name..." required></textarea>
         <textarea id="messageInput" placeholder="Your message... :)" required></textarea>
         <button type="submit">Submit</button>
