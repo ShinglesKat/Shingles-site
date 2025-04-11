@@ -1,27 +1,26 @@
 import sqlite3
 import os
-connection = sqlite3.connect('database.db')
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(script_dir)
+def init_db():
+    connection = sqlite3.connect('database.db')
 
-# Now the working directory is where init_db.py is located, and file paths should work as expected
-print(f"Current working directory: {os.getcwd()}")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
 
-with open('schema.sql') as f:
-    connection.executescript(f.read())
+    print(f"Current working directory: {os.getcwd()}")
 
-cur = connection.cursor()
+    with open('schema.sql') as f:
+        connection.executescript(f.read())
 
-try:
-    cur.execute("INSERT INTO messages (username, content) VALUES (?, ?)",
-                ('Test User', 'Content for the first post'))
-    cur.execute("INSERT INTO messages (username, content) VALUES (?, ?)",
-                ('Test User2', 'Content for the second post'))
-    connection.commit()  # Make sure to commit after all inserts
-except sqlite3.Error as e:
-    print(f"Error occurred: {e}")
+    cursor = connection.cursor()
 
-connection.close()
-
-
+    try:
+        cursor.execute("INSERT INTO messages (username, content) VALUES (?, ?)",
+                    ('Test User', 'Content for the first post'))
+        cursor.execute("INSERT INTO messages (username, content) VALUES (?, ?)",
+                    ('Test User2', 'Content for the second post'))
+        connection.commit()
+    except sqlite3.Error as e:
+        print(f"Error occurred: {e}")
+    finally:
+        connection.close()
