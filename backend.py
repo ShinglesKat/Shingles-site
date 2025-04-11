@@ -50,8 +50,3 @@ def handle_messages() -> jsonify:
         return render_template('message.html', messages=messages_dicts)
     else:
         jsonify({"error": "Invalid request method"}), 400
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-window.onload = handle_messages
