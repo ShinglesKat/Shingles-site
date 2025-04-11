@@ -16,9 +16,7 @@ def init_db():
 
     try:
         cursor.execute("INSERT INTO messages (username, content) VALUES (?, ?)",
-                    ('Test User', 'Content for the first post'))
-        cursor.execute("INSERT INTO messages (username, content) VALUES (?, ?)",
-                    ('Test User2', 'Content for the second post'))
+                    ('Shingle', 'Test content for first post :^)'))
         connection.commit()
     except sqlite3.Error as e:
         print(f"Error occurred: {e}")
