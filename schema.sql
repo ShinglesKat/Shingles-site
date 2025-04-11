@@ -1,0 +1,8 @@
+DROP TABLE IF EXISTS messages;
+
+CREATE TABLE messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    username TEXT CHECK (LENGTH(username) > 1 AND LENGTH(username) < 17),
+    content TEXT NOT NULL CHECK (LENGTH(content) < 200)
+);
