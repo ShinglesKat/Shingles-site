@@ -1,13 +1,20 @@
 import sqlite3
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, session, redirect, request, jsonify, render_template, url_for
 from markupsafe import escape
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+print("SECRET_KEY:", os.getenv('SECRET_KEY'))
+print("ADMIN_PASSWORD:", os.getenv('ADMIN_PASSWORD'))
 
 if not os.path.exists("database.db"):
+    print("Pre-existing database not found...")
     from init_db import init_db
     init_db()
 
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY')
 
 def get_db_connections() -> sqlite3.Connection:
     conn = sqlite3.connect('database.db')
@@ -50,3 +57,39 @@ def handle_messages() -> jsonify:
         return render_template('message.html', messages=messages_dicts)
     else:
         jsonify({"error": "Invalid request method"}), 400
+        
+        
+        
+@app.route('/login.html', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST' and request.form['password'] == os.getenv('ADMIN_PASSWORD'):
+        session['admin'] = True
+        return redirect(url_for('home'))
+
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('admin', None)
+    return redirect(url_for('home'))
+        
+        
+        
+        
+#For use in deleting comments        
+@app.route('/delete/<int:message_id>', methods=['POST'])
+def delete_message(message_id):
+    if not session.get('admin'):
+        return jsonify({"error": "You are not authorized to perform this action!"}), 403
+    
+    conn = get_db_connections()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM messages WHERE id = ?", (message_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for('handle_messages'))
+
+
+#Comment out if not local testing :)
+if __name__ == '__main__':
+    app.run(debug=True)

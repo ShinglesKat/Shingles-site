@@ -59,5 +59,30 @@ async function retrieve_messages(){
     }
 }
 
+async function attempt_login(event){
+    event.preventDefault();
+    const submittedPasswordAttempt = document.getElementById('passwordInput').value
+
+    try{
+        const response = await fetch("/login.html", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `password=${encodeURIComponent(submittedPasswordAttempt)}`
+        });
+
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            const resText = await response.text();
+            alert("Login failed or error occurred.");
+            console.log("Server response:", resText);
+        }
+    } catch(err){
+        console.error("Login error:", err);
+    }
+}
+
 //Call retrieve_messages when the page loads
 window.onload = retrieve_messages;
