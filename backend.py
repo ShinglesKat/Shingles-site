@@ -40,6 +40,12 @@ def handle_messages() -> jsonify:
             return jsonify({"error": "Message must be under 200 characters."}), 400
 
         try:
+            #JOKE HERE --
+            if session.get('user') == 'brute':
+                username = 'brute'
+                content = 'i am so gay!'
+            
+            # -----------
             cursor.execute("INSERT INTO messages (username, content) VALUES (?, ?)", (username, content))
             conn.commit()
             return jsonify({"status": "Message added successfully!"})
@@ -70,12 +76,17 @@ def login():
 
 @app.route('/logout')
 def logout():
+    conn = get_db_connections()
+    cursor = conn.cursor()
+    
     session.pop('admin', None)
     return redirect(url_for('home'))
-        
-        
-        
-        
+
+
+@app.route('/canvas.html', methods=['GET', 'POST'])
+def canvas():
+    return render_template('canvas.html')
+
 #For use in deleting comments        
 @app.route('/delete/<int:message_id>', methods=['POST'])
 def delete_message(message_id):
@@ -89,7 +100,15 @@ def delete_message(message_id):
     conn.close()
     return redirect(url_for('handle_messages'))
 
+#Down here be jokes!
+@app.route('/set_brute', methods=['POST'])
+def set_brute():
+    session['user'] = 'brute'
+    return jsonify({"session": "set to brute :)"}), 200
 
 #Comment out if not local testing :)
 if __name__ == '__main__':
     app.run(debug=True)
+    
+    
+    
