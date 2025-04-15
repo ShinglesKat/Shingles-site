@@ -13,6 +13,12 @@ if not os.path.exists("database.db"):
     from init_db import init_db
     init_db()
 
+if not os.path.exists("pixels.db"):
+    print("Pre-existing pixel database not found...")
+    from init_db import init_pixel_db
+    init_pixel_db()
+    
+
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 

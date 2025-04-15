@@ -1,8 +1,19 @@
 DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS pixels;
 
 CREATE TABLE messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     username TEXT CHECK (LENGTH(username) > 1 AND LENGTH(username) < 17),
     content TEXT NOT NULL CHECK (LENGTH(content) < 200)
+);
+
+
+CREATE TABLE pixels (
+    x INTEGER NOT NULL,
+    y INTEGER NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    user TEXT,
+    colour TEXT,
+    PRIMARY KEY (x, y)
 );
