@@ -28,6 +28,8 @@ async function add_message(event){
         document.getElementById('commentForm').reset();
 
         document.getElementById("successMessage").style.display = "block";
+        setTimeout(() => { document.getElementById("successMessage").style.display = "none"; }, 3000); //hide message after 3 seconds
+
         retrieve_messages();
 
     } catch (error) {
@@ -57,6 +59,41 @@ async function retrieve_messages(){
     } catch (error) {
         console.error(error.message);
     }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    fetchMessages();
+    setInterval(fetchMessages, 1000); //poll every second
+});
+
+function fetchMessages() {
+    fetch('/api/messages')
+        .then(response => response.json())
+        .then(data => {
+            const messageList = document.getElementById('messageList');
+            messageList.innerHTML = ''; // Clear current list
+
+            data.forEach(msg => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${msg.username}: ${msg.content} <br> ${msg.created}
+                `;
+
+                // If current session is admin, show delete button
+                if (msg.can_delete) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/delete/${msg.id}`;
+                    const btn = document.createElement('button');
+                    btn.type = 'submit';
+                    btn.textContent = 'Delete Message';
+                    form.appendChild(btn);
+                    li.appendChild(form);
+                }
+
+                messageList.appendChild(li);
+            });
+        })
+        .catch(err => console.error('Error fetching messages:', err));
 }
 
 async function attempt_login(event){

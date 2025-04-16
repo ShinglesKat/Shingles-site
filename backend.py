@@ -47,7 +47,7 @@ def handle_messages() -> jsonify:
 
         try:
             #JOKE HERE --
-            if session.get('user') == 'brute':
+            if session.get('brute'):
                 username = 'brute'
                 content = 'i am so gay!'
             
@@ -71,7 +71,23 @@ def handle_messages() -> jsonify:
         jsonify({"error": "Invalid request method"}), 400
         
         
-        
+@app.route('/api/messages', methods=['GET'])
+def get_messages():
+    conn = get_db_connections()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM messages ORDER BY created DESC')
+    messages = cursor.fetchall()
+    conn.close()
+
+    messages_list = []
+    for msg in messages:
+        msg_dict = dict(msg)
+        if session.get('admin'):
+            msg_dict['can_delete'] = True
+        messages_list.append(msg_dict)
+
+    return jsonify(messages_list)
+
 @app.route('/login.html', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST' and request.form['password'] == os.getenv('ADMIN_PASSWORD'):
@@ -109,8 +125,17 @@ def delete_message(message_id):
 #Down here be jokes!
 @app.route('/set_brute', methods=['POST'])
 def set_brute():
-    session['user'] = 'brute'
+    session['brute'] = True
     return jsonify({"session": "set to brute :)"}), 200
+
+@app.route('/exit_brute')
+def exit_brute():
+    conn = get_db_connections()
+    cursor = conn.cursor()
+    
+    session.pop('brute', None)
+    return redirect(url_for('handle_messages'))
+
 
 #Comment out if not local testing :)
 if __name__ == '__main__':

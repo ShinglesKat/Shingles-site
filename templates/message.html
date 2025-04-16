@@ -24,16 +24,7 @@
     <h4 id="successMessage" style="display: none;">Message successfully added!</h4>
 
     <h2>Messages:</h2>
-    <ul id="messageList">
-        {% for msg in messages %}
-            <li>{{ msg.username }}: {{ msg.content }} <br> {{msg.created}}</li>
-            {% if session.get('admin') %}
-                <form method="POST" action="{{url_for('delete_message', message_id=msg.id)}}">
-                    <button type="submit">Delete Message</button>
-                </form>
-                {% endif%}
-        {% endfor %}
-    </ul>
+    <ul id="messageList"></ul>
 
 
     <footer>
@@ -41,6 +32,10 @@
             <a href="login.html">Secret Shingle Login</a>
         {% else %}
             <a href="{{ url_for('logout') }}">Logout</a>
+        {% endif %}
+
+        {% if session.get('brute') %}
+            <a href="{{ url_for('exit_brute') }}">Exit brute mode</a>
         {% endif %}
     </footer>
     <script src="static/js/script.js"></script>
