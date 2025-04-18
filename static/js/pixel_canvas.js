@@ -8,7 +8,7 @@ const colourInput = document.getElementById("colourInput")
 const toggleGuide = document.getElementById("toggleGuide")
 
 const drawingContext = canvas.getContext("2d");
-const CELL_SIDE_COUNT = 100;
+const CELL_SIDE_COUNT = 50;
 const cellPixelLength = canvas.width/ CELL_SIDE_COUNT;
 const colourHistory = {};
 

@@ -125,7 +125,7 @@ def delete_message(message_id):
     return redirect(url_for('handle_messages'))
 
 #CANVAS
-CELL_SIDE_COUNT = 100
+CELL_SIDE_COUNT = 50
 DEFAULT_COLOUR = "#ffffff"
 saveInterval = 300
 
