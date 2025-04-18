@@ -70,7 +70,7 @@ function fetchMessages() {
         .then(response => response.json())
         .then(data => {
             const messageList = document.getElementById('messageList');
-            messageList.innerHTML = ''; // Clear current list
+            messageList.innerHTML = '';
 
             data.forEach(msg => {
                 const li = document.createElement('li');

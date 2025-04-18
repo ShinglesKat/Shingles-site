@@ -1,20 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <title>Shingles's amazing website</title>
+    <title>Shingles's Amazing Website</title>
     <link rel="stylesheet" href="static/css/styles.css">
 </head>
+
 <body>
+
     <header>
-        <h1>Shingles Awesome Website</h1>
+        <h1 style="display:inline;">Shingles's Awesome Website</h1>
         <div class="topnav">
             <a class="active" href="/">Home</a>
             <a class="active" href="message.html">Leave a Message</a>
+            <a class="active" href="canvas.html">Pixel Canvas</a>
         </div>
     </header>
 
-    <h2>Leave a Message</h2>
+    <h2 style="text-align: center">Leave a Message</h2>
 
+    <!-- Handle adding messages -->
     <form id="commentForm" onsubmit="add_message(event)">
         <textarea id="nameInput" placeholder="Your name..." required></textarea>
         <textarea id="messageInput" placeholder="Your message... :)" required></textarea>
@@ -25,7 +30,6 @@
 
     <h2>Messages:</h2>
     <ul id="messageList"></ul>
-
 
     <footer>
         {% if not session.get('admin') %}
@@ -38,7 +42,9 @@
             <a href="{{ url_for('exit_brute') }}">Exit brute mode</a>
         {% endif %}
     </footer>
-    <script src="static/js/script.js"></script>
-</body>
-</html>
 
+    <script src="static/js/script.js"></script>
+
+</body>
+
+</html>

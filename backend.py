@@ -1,4 +1,6 @@
 import sqlite3
+from threading import Lock, Thread
+import time
 from flask import Flask, session, redirect, request, jsonify, render_template, url_for
 from markupsafe import escape
 import os
@@ -22,8 +24,8 @@ if not os.path.exists("pixels.db"):
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 
-def get_db_connections() -> sqlite3.Connection:
-    conn = sqlite3.connect('database.db')
+def get_db_connections(db_name='database.db') -> sqlite3.Connection:
+    conn = sqlite3.connect(db_name)
     conn.row_factory = sqlite3.Row
     return conn
     
@@ -105,9 +107,9 @@ def logout():
     return redirect(url_for('home'))
 
 
-@app.route('/canvas.html', methods=['GET', 'POST'])
+@app.route('/canvas.html', methods=['GET'])
 def canvas():
-    return render_template('canvas.html')
+    return render_template('canvas.html', cell_side_count=CELL_SIDE_COUNT)
 
 #For use in deleting comments        
 @app.route('/delete/<int:message_id>', methods=['POST'])
@@ -121,6 +123,11 @@ def delete_message(message_id):
     conn.commit()
     conn.close()
     return redirect(url_for('handle_messages'))
+
+#CANVAS
+CELL_SIDE_COUNT = 100
+DEFAULT_COLOUR = "#ffffff"
+saveInterval = 300
 
 #Down here be jokes!
 @app.route('/set_brute', methods=['POST'])

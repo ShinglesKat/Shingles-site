@@ -1,22 +1,56 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Shingles's amazing website</title>
-    <link rel="stylesheet" href="static/css/styles.css">
+    <title>Shingles's Amazing Website</title>
+    <link rel="stylesheet" href="static/css/styles.css" />
 </head>
 <body>
     <header>
-        <h1>Shingles Awesome Website</h1>
+        <h1 style="display:inline;">Shingles's Awesome Website</h1>
         <div class="topnav">
             <a class="active" href="/">Home</a>
-            <a class="active" href="message.html"> Leave a Message</a>
+            <a class="active" href="message.html">Leave a Message</a>
             <a class="active" href="canvas.html">Pixel Canvas</a>
         </div>
     </header>
     
-    <h2>Empty for now... But be expecting a pixel canvas soon :3</h2>
+    <!-- Zoom Controls -->
+    <div class="zoom-controls">
+        <button id="zoomIn">Zoom In</button>
+        <button id="zoomOut">Zoom Out</button>
+        <span>Zoom: <span id="zoomLevelDisplay">1x</span></span>
+    </div>
 
-    <script src="static/js/pixel_canvas.js"></script>
+    <!-- Scrollable Canvas Container -->
+    <div id="canvasWrapper">
+        <div id="canvasContainer">
+            <div id="guide"></div>
+            <canvas width="750" height="750" id="canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- Controls Below -->
+    <div class="control-panel">
+        <div>
+            <label for="colourInput">Set Colour</label><br />
+            <input type="color" id="colourInput" />
+        </div>
+
+        <div>
+            <label for="toggleGuide">Show Guide:</label><br />
+            <input type="checkbox" id="toggleGuide" checked />
+        </div>
+
+        <div class="preset-colours">
+            <button class="colour-btn" data-colour="#ff0000" style="background: red;">Red</button>
+            <button class="colour-btn" data-colour="#00ff00" style="background: green;">Green</button>
+            <button class="colour-btn" data-colour="#0000ff" style="background: blue;">Blue</button>
+            <button class="colour-btn" data-colour="#ffa500" style="background: orange;">Orange</button>
+            <button class="colour-btn" data-colour="#000000" style="background: black; color: white;">Black</button>
+            <button class="colour-btn" data-colour="#ffffff" style="background: white; border: 1px solid #ccc;">White</button>
+        </div>
+    </div>
+
+    <script src="static/js/pixel_canvas.js" defer></script>
 </body>
 </html>
-

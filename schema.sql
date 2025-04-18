@@ -13,7 +13,7 @@ CREATE TABLE pixels (
     x INTEGER NOT NULL,
     y INTEGER NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    user TEXT,
+
     colour TEXT,
     PRIMARY KEY (x, y)
 );
