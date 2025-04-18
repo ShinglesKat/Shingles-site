@@ -2,6 +2,8 @@
  * @type HTMLCanvasElement
  * CREDIT TO dcode ON YOUTUBE FOR PIXEL ART CANVAS TUTORIAL
  */
+
+let isDrawing = false;
 const canvas = document.getElementById("canvas")
 const guide = document.getElementById("guide")
 const colourInput = document.getElementById("colourInput")
@@ -81,3 +83,20 @@ function fillCell(cellX, cellY){
 
 canvas.addEventListener("mousedown", handleCanvasMousedown);
 toggleGuide.addEventListener("change", handleToggleGuideChange);
+
+canvas.addEventListener("mousedown", (e) => {
+    isDrawing = true;
+    handleCanvasMousedown(e);
+});
+canvas.addEventListener("mousemove", (e) => {
+    if(isDrawing){
+        handleCanvasMousedown(e);
+    }
+});
+
+canvas.addEventListener("mouseup", () => {
+    isDrawing = false;
+});
+canvas.addEventListener("mouseleave", () => {
+    isDrawing = false;
+});
