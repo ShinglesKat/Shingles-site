@@ -9,6 +9,17 @@ header{
     padding: 0.5rem 0;
 }
 
+footer{
+    position:fixed;
+    bottom:0px;
+    width: 100%;
+    max-width: fit-content;
+}
+
+footer a {
+    text-decoration: none;
+}
+
 body{
     background: #A1F9FF;
     background: radial-gradient(circle,rgba(161, 249, 255, 1) 0%, rgba(212, 255, 255, 1) 100%);

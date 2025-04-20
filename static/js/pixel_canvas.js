@@ -27,6 +27,24 @@ for (let i = 0; i < CELL_SIDE_COUNT; i++) {
     }
 }
 
+fetch("/api/canvas")
+    .then(res => res.json())
+    .then(data => {
+        for (let y = 0; y < CELL_SIDE_COUNT; y++) {
+            for (let x = 0; x < CELL_SIDE_COUNT; x++) {
+                const colour = data[y][x];
+                if (colour) {
+                    const startX = x * cellPixelLength;
+                    const startY = y * cellPixelLength;
+
+                    drawingContext.fillStyle = colour;
+                    drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
+                    colourHistory[`${x}_${y}`] = colour;
+                }
+            }
+        }
+    });
+
 document.querySelectorAll(".colour-btn").forEach(btn => {
     btn.addEventListener("click", () => {
         const {colour} = btn.dataset;
@@ -79,7 +97,44 @@ function fillCell(cellX, cellY){
     drawingContext.fillStyle = colourInput.value;
     drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
     colourHistory[`${cellX}_${cellY}`] = colourInput.value;
+
+    fetch("/canvas/updatePixel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({x : cellX, y: cellY, colour:colourInput.value}),
+    });
 }
+
+function refreshCanvasFromServer() {
+    if (isDrawing) {
+        //Don't refresh while drawing
+        return;
+    }
+
+    fetch("/api/canvas")
+        .then(res => res.json())
+        .then(data => {
+            for (let y = 0; y < CELL_SIDE_COUNT; y++) {
+                for (let x = 0; x < CELL_SIDE_COUNT; x++) {
+                    const colour = data[y][x];
+                    const key = `${x}_${y}`;
+
+                    //Only update if the colour has changed
+                    if (colour && colour !== colourHistory[key]) {
+                        const startX = x * cellPixelLength;
+                        const startY = y * cellPixelLength;
+
+                        drawingContext.fillStyle = colour;
+                        drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
+                        colourHistory[key] = colour;
+                    }
+                }
+            }
+        })
+        .catch(err => console.error("Error updating canvas:", err));
+}
+
+
 
 canvas.addEventListener("mousedown", handleCanvasMousedown);
 toggleGuide.addEventListener("change", handleToggleGuideChange);
@@ -93,10 +148,39 @@ canvas.addEventListener("mousemove", (e) => {
         handleCanvasMousedown(e);
     }
 });
-
 canvas.addEventListener("mouseup", () => {
     isDrawing = false;
 });
 canvas.addEventListener("mouseleave", () => {
     isDrawing = false;
 });
+
+//Poll server for update every second :>
+setInterval(refreshCanvasFromServer, 1000);
+
+//Admin stuff
+const clearCanvasButton = document.getElementById("clearCanvasBtn");
+if (clearCanvasButton) {
+    clearCanvasButton.addEventListener("click", () => {
+        clearCanvas();
+    })
+}
+
+//clears the canvas on client side, make request to server
+function clearCanvas() {
+    for (let i = 0; i < CELL_SIDE_COUNT; i++) {
+        for (let j = 0; j < CELL_SIDE_COUNT; j++) {
+            colourHistory[`${i}_${j}`] = colourInput.value;
+        }
+    }
+
+    fetch("/canvas/clear", {
+        method: "POST"
+    }).then(res => res.json())
+    .then(data => {
+
+    console.log("Canvas cleared on server:", data);
+    
+    refreshCanvasFromServer();
+    }).catch(err => console.error("Error clearing canvas on server:", err));
+}

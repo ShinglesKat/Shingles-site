@@ -106,11 +106,6 @@ def logout():
     session.pop('admin', None)
     return redirect(url_for('home'))
 
-
-@app.route('/canvas.html', methods=['GET'])
-def canvas():
-    return render_template('canvas.html', cell_side_count=CELL_SIDE_COUNT)
-
 #For use in deleting comments        
 @app.route('/delete/<int:message_id>', methods=['POST'])
 def delete_message(message_id):
@@ -128,6 +123,96 @@ def delete_message(message_id):
 CELL_SIDE_COUNT = 50
 DEFAULT_COLOUR = "#ffffff"
 saveInterval = 300
+pendingUpdates = []
+pixelArray=[]
+
+        
+def load_pixel_array():
+    arr = [[DEFAULT_COLOUR for _ in range(CELL_SIDE_COUNT)] for _ in range(CELL_SIDE_COUNT)]
+    conn = get_db_connections('pixels.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT x, y, colour FROM pixels")
+    for x, y, colour in cursor.fetchall():
+        if 0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT:
+            arr[y][x] = colour
+        conn.close()
+        return arr
+pixelArray = load_pixel_array()
+
+#save to database every 120 seconds, flush all lines waiting to be updated, my apologies if you're drawing at that time :)
+def flush_pending_updates():
+    while True:
+        time.sleep(120)
+        update_pixel_db(pendingUpdates)
+        pendingUpdates = []
+        print("Updated Database... (pixels.db)")
+Thread(target=flush_pending_updates, daemon=True).start()
+
+def update_pixel_db(pixelArray):
+    conn = get_db_connections('pixels.db')
+    cursor = conn.cursor()
+    
+    for pixel in pixelArray:
+        x, y, colour = pixel
+
+        #Update the color for the specific pixel (x, y)
+        cursor.execute("""
+            INSERT INTO pixels (x, y, colour) 
+            VALUES (?, ?, ?) 
+            ON CONFLICT(x, y) 
+            DO UPDATE SET colour = ?;
+        """, (x, y, colour, colour))
+
+    conn.commit()
+    conn.close()
+
+@app.route('/canvas/updatePixel', methods=['POST'])
+def update_pixel():
+    data = request.get_json()
+    x = data.get("x")
+    y = data.get("y")
+    colour = data.get("colour")
+    
+    if x is None or y is None or colour is None:
+        return jsonify({"error": "Missing pixel data"}), 400
+    
+    if 0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT:
+        pixelArray[y][x] = colour
+        pendingUpdates.append((x, y, colour))
+        return jsonify({"status": "Pixel updated in memory"}), 200
+    else:
+        return jsonify({"error": "Invalid coordinates"}), 400
+
+#this canvas clear was a pain in my ass and harder than I thought it'd be -.-
+@app.route('/canvas/clear', methods=['POST'])
+def clear_canvas():
+    conn = get_db_connections('pixels.db')
+    cursor = conn.cursor()
+
+    #Reset all pixels to white in the database
+    cursor.execute("UPDATE pixels SET colour = ? WHERE x BETWEEN 0 AND ? AND y BETWEEN 0 AND ?", (DEFAULT_COLOUR, CELL_SIDE_COUNT - 1, CELL_SIDE_COUNT - 1))
+    conn.commit()
+
+    #Ensure all pixels cleared correctly.
+    cursor.execute("SELECT * FROM pixels WHERE colour != ?", (DEFAULT_COLOUR,))
+    if remaining_pixels := cursor.fetchall():
+        print("Pixels that weren't cleared:", remaining_pixels)
+
+    #
+    global pixelArray
+    pixelArray = [[DEFAULT_COLOUR for _ in range(CELL_SIDE_COUNT)] for _ in range(CELL_SIDE_COUNT)]
+
+    conn.close()
+
+    return jsonify({"status": "Canvas cleared successfully!"}), 200
+
+@app.route('/api/canvas', methods=['GET'])
+def get_pixel_array():
+    return jsonify(pixelArray)
+
+@app.route('/canvas.html', methods=['GET'])
+def canvas():
+    return render_template('canvas.html', cell_side_count=CELL_SIDE_COUNT)
 
 #Down here be jokes!
 @app.route('/set_brute', methods=['POST'])

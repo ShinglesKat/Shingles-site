@@ -66,6 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function fetchMessages() {
+    if (!messageList) {
+        console.log("Not on message");
+        return;
+    }
+
     fetch('/api/messages')
         .then(response => response.json())
         .then(data => {
