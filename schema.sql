@@ -17,3 +17,10 @@ CREATE TABLE pixels (
     colour TEXT,
     PRIMARY KEY (x, y)
 );
+
+CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE CHECK(LENGTH(username) > 2 AND LENGTH(username) < 17),
+    password SHA256() NOT NULL,
+    creationTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
