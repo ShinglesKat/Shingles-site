@@ -9,7 +9,7 @@ async function add_message(event){
     const content = document.getElementById('messageInput').value;
 
     try {
-        const response = await fetch("/message.html", {
+        const response = await fetch("/message/post_message", {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
@@ -17,23 +17,30 @@ async function add_message(event){
             body: `username=${encodeURIComponent(username)}&content=${encodeURIComponent(content)}`
         });
 
+        // Check if response is successful
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
         }
 
+        // Parse the JSON response
         const result = await response.json();
         console.log(result);
 
-        //clear form after submission
+        // Clear form after submission
         document.getElementById('commentForm').reset();
 
+        // Show success message and hide after 3 seconds
         document.getElementById("successMessage").style.display = "block";
-        setTimeout(() => { document.getElementById("successMessage").style.display = "none"; }, 3000); //hide message after 3 seconds
+        setTimeout(() => { 
+            document.getElementById("successMessage").style.display = "none"; 
+        }, 3000);
 
+        // Retrieve updated messages
         retrieve_messages();
 
     } catch (error) {
         console.error("Error adding message:", error.message);
+        showAlert(`Error adding message: ${error.message}`);
     }
 }
 
@@ -71,7 +78,7 @@ function fetchMessages() {
         return;
     }
 
-    fetch('/api/messages')
+    fetch('/api/get_messages')
         .then(response => response.json())
         .then(data => {
             const messageList = document.getElementById('messageList');
@@ -99,31 +106,6 @@ function fetchMessages() {
             });
         })
         .catch(err => console.error('Error fetching messages:', err));
-}
-
-async function attempt_login(event){
-    event.preventDefault();
-    const submittedPasswordAttempt = document.getElementById('passwordInput').value
-
-    try{
-        const response = await fetch("/login.html", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: `password=${encodeURIComponent(submittedPasswordAttempt)}`
-        });
-
-        if (response.redirected) {
-            window.location.href = response.url;
-        } else {
-            const resText = await response.text();
-            alert("Login failed or error occurred.");
-            console.log("Server response:", resText);
-        }
-    } catch(err){
-        console.error("Login error:", err);
-    }
 }
 //Call retrieve_messages when the page loads
 window.onload = retrieve_messages;

@@ -11,6 +11,11 @@
             <a class="active" href="/">Home</a>
             <a class="active" href="message.html">Leave a Message</a>
             <a class="active" href="canvas.html">Pixel Canvas</a>
+            {% if session.get('username') %}
+                <a class="active" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
+            {% else %}
+                <a class="active" href="login.html">Login</a>
+            {% endif %}
         </div>
     </header>
     
@@ -50,11 +55,8 @@
 
 
     <footer>
-        {% if not session.get('admin') %}
-            <a href="login.html">Secret Shingle Login</a>
-        {% else %}
+        {% if session.get('admin') %}
             <button id="clearCanvasBtn">Clear Canvas</button>
-            <a href="{{ url_for('logout') }}">Logout</a>
         {% endif %}
     </footer>
 

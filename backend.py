@@ -20,60 +20,65 @@ if not os.path.exists("pixels.db"):
     from init_db import init_pixel_db
     init_pixel_db()
     
+if not os.path.exists("userinfo.db"):
+    print("Pre-existing userinfo database not found...")
+    from init_db import init_userinfo_db
+    init_userinfo_db()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
-
-def get_db_connections(db_name='database.db') -> sqlite3.Connection:
-    conn = sqlite3.connect(db_name)
-    conn.row_factory = sqlite3.Row
-    return conn
     
 @app.route('/')
 def home():
     return render_template('index.html')
 
-@app.route('/message.html', methods=['GET', 'POST'])
+@app.route('/message.html')
+def render_message_page():
+    return render_template('message.html')
+
+@app.route('/canvas.html')
+def render_canvas_page():
+    return render_template('canvas.html', cell_side_count=CELL_SIDE_COUNT)
+
+@app.route('/login.html')
+def render_login_page():
+    return render_template('login.html')
+
+def get_db_connections(db_name='database.db') -> sqlite3.Connection:
+    conn = sqlite3.connect(db_name)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+@app.route('/message/post_message', methods=['POST'])
 def handle_messages() -> jsonify:
     conn = get_db_connections()
     cursor = conn.cursor()
 
-    if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        content = request.form.get('content', '').strip()
+    username = request.form.get('username', '').strip()
+    content = request.form.get('content', '').strip()
 
-        if not (1 < len(username) < 17):
-            return jsonify({"error": "Username must be between 2 and 16 characters."}), 400
-        if not (0 < len(content) < 200):
-            return jsonify({"error": "Message must be under 200 characters."}), 400
+    #Ensure valid username and content.
+    if not (1 < len(username) < 17):
+        return jsonify({"error": "Username must be between 2 and 16 characters."}), 400
+    if not (0 < len(content) < 200):
+        return jsonify({"error": "Message must be under 200 characters."}), 400
+    try:
 
-        try:
-            #JOKE HERE --
-            if session.get('brute'):
-                username = 'brute'
-                content = 'i am so gay!'
-            
-            # -----------
-            cursor.execute("INSERT INTO messages (username, content) VALUES (?, ?)", (username, content))
-            conn.commit()
-            return jsonify({"status": "Message added successfully!"})
-        except sqlite3.IntegrityError:
-            return jsonify({"error": "Database error? How did you even trigger this... Maybe stop trying to break it ;-;"}), 400
-        finally:
-            conn.close()
-
-    elif request.method == 'GET':
-        cursor.execute('SELECT * FROM messages')
-        messages = cursor.fetchall()
+    #JOKE HERE --
+        if session.get('brute'):
+            username = 'brute'
+            content = 'i am so gay!'
+    # -----------
+        cursor.execute("INSERT INTO messages (username, content) VALUES (?, ?)", (username, content))
+        conn.commit()
+        return jsonify({"status": "Message added successfully!"})
+    except sqlite3.IntegrityError:
+        return jsonify({"error": "Database error? How did you even trigger this... Maybe stop trying to break it ;-;"}), 400
+    finally:
         conn.close()
-
-        messages_dicts = [dict(msg) for msg in messages]
-        return render_template('message.html', messages=messages_dicts)
-    else:
-        jsonify({"error": "Invalid request method"}), 400
+    
         
-        
-@app.route('/api/messages', methods=['GET'])
+@app.route('/api/get_messages', methods=['GET'])
 def get_messages():
     conn = get_db_connections()
     cursor = conn.cursor()
@@ -90,22 +95,6 @@ def get_messages():
 
     return jsonify(messages_list)
 
-@app.route('/login.html', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST' and request.form['password'] == os.getenv('ADMIN_PASSWORD'):
-        session['admin'] = True
-        return redirect(url_for('home'))
-
-    return render_template('login.html')
-
-@app.route('/logout')
-def logout():
-    conn = get_db_connections()
-    cursor = conn.cursor()
-    
-    session.pop('admin', None)
-    return redirect(url_for('home'))
-
 #For use in deleting comments        
 @app.route('/delete/<int:message_id>', methods=['POST'])
 def delete_message(message_id):
@@ -117,7 +106,69 @@ def delete_message(message_id):
     cursor.execute("DELETE FROM messages WHERE id = ?", (message_id,))
     conn.commit()
     conn.close()
-    return redirect(url_for('handle_messages'))
+    return redirect(url_for('render_message_page'))
+
+
+#Login Stuff
+
+@app.route('/register_account', methods=['POST'])
+def register_account():
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    if not username or not password:
+        return jsonify({"error": "Failed to register account!"}), 403
+
+    conn = get_db_connections('userinfo.db')
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM userinfo WHERE username = ?", (username,))
+    if cursor.fetchone():
+        return jsonify({"error": "Failed to register account! Name already taken..."}), 403
+
+    # Insert user with hashed password
+    cursor.execute("INSERT INTO userinfo (username, password) VALUES (?, ?)", (username, password))
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "Account successfully registered!"}), 200
+
+
+@app.route('/login', methods=['POST'])
+def attempt_login():
+    password = request.form.get('password', '').strip()
+    username = request.form.get('username', '').strip()
+
+    #Check if attempting to login as admin user, useful for when server restarts and 0 accounts.
+    if username == os.getenv('ADMIN_USERNAME') and password == os.getenv('ADMIN_PASSWORD'):
+        session['admin'] = True
+        session['username'] = username
+        session['accounttype'] = 'admin'
+        return redirect(url_for('home'))
+
+    conn = get_db_connections('userinfo.db')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM userinfo WHERE username = ? AND password = ?", (username, password))
+    user = cursor.fetchone()
+    conn.close()
+
+    if user:
+        session['username'] = username
+        session['accounttype'] = user['userType']
+        return redirect(url_for('home'))
+    else:
+        return "Invalid credentials", 401
+
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    session.pop('admin', None)
+    session.pop('accounttype', None)
+
+    # Redirect to home or another page after logout
+    return redirect(url_for('home'))
+
 
 #CANVAS
 CELL_SIDE_COUNT = 50
@@ -135,8 +186,8 @@ def load_pixel_array():
     for x, y, colour in cursor.fetchall():
         if 0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT:
             arr[y][x] = colour
-        conn.close()
-        return arr
+    conn.close()
+    return arr
 pixelArray = load_pixel_array()
 
 #save to database every 120 seconds, flush all lines waiting to be updated, my apologies if you're drawing at that time :)
@@ -210,9 +261,7 @@ def clear_canvas():
 def get_pixel_array():
     return jsonify(pixelArray)
 
-@app.route('/canvas.html', methods=['GET'])
-def canvas():
-    return render_template('canvas.html', cell_side_count=CELL_SIDE_COUNT)
+
 
 #Down here be jokes!
 @app.route('/set_brute', methods=['POST'])

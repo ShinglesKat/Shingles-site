@@ -73,6 +73,11 @@ function handleCanvasMousedown(e){
     const y = e.clientY - canvasBoundingRect.top;
     const cellX = Math.floor(x / cellPixelLength);
     const cellY = Math.floor(y / cellPixelLength);
+
+    if(cellX < 0 || cellY < 0 || cellX >= CELL_SIDE_COUNT || cellY >= CELL_SIDE_COUNT){
+        return;
+    }
+
     const currentColour = colourHistory[`${cellX}_${cellY}`];
     
     if(e.ctrlKey){
@@ -83,7 +88,6 @@ function handleCanvasMousedown(e){
         fillCell(cellX, cellY);
     }
 
-    
     console.log(x, y);
 }
 function handleToggleGuideChange(){
@@ -134,11 +138,6 @@ function refreshCanvasFromServer() {
         .catch(err => console.error("Error updating canvas:", err));
 }
 
-
-
-canvas.addEventListener("mousedown", handleCanvasMousedown);
-toggleGuide.addEventListener("change", handleToggleGuideChange);
-
 canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
     handleCanvasMousedown(e);
@@ -154,6 +153,8 @@ canvas.addEventListener("mouseup", () => {
 canvas.addEventListener("mouseleave", () => {
     isDrawing = false;
 });
+
+toggleGuide.addEventListener("change", handleToggleGuideChange);
 
 //Poll server for update every second :>
 setInterval(refreshCanvasFromServer, 1000);
@@ -178,9 +179,7 @@ function clearCanvas() {
         method: "POST"
     }).then(res => res.json())
     .then(data => {
-
-    console.log("Canvas cleared on server:", data);
-    
-    refreshCanvasFromServer();
+        console.log("Canvas cleared on server:", data);
+        refreshCanvasFromServer();
     }).catch(err => console.error("Error clearing canvas on server:", err));
 }

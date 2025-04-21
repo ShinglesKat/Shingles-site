@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS messages;
 DROP TABLE IF EXISTS pixels;
+DROP TABLE IF EXISTS userinfo;
 
 CREATE TABLE messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -7,7 +8,6 @@ CREATE TABLE messages (
     username TEXT CHECK (LENGTH(username) > 1 AND LENGTH(username) < 17),
     content TEXT NOT NULL CHECK (LENGTH(content) < 200)
 );
-
 
 CREATE TABLE pixels (
     x INTEGER NOT NULL,
@@ -18,9 +18,10 @@ CREATE TABLE pixels (
     PRIMARY KEY (x, y)
 );
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS userinfo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE CHECK(LENGTH(username) > 2 AND LENGTH(username) < 17),
-    password SHA256() NOT NULL,
-    creationTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+    username TEXT NOT NULL UNIQUE CHECK(LENGTH(username) >= 3 AND LENGTH(username) <= 16),
+    password TEXT NOT NULL,
+    creationTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    userType TEXT DEFAULT 'User'
+);

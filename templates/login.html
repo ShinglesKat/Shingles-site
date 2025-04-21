@@ -11,16 +11,30 @@
             <a class="active" href="/">Home</a>
             <a class="active" href="message.html">Leave a Message</a>
             <a class="active" href="canvas.html">Pixel Canvas</a>
+            {% if session.get('username') %}
+                <a class="active" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
+            {% else %}
+                <a class="active" href="login.html">Login</a>
+            {% endif %}
         </div>
     </header>
 
 
-    <form id="passwordForm" onsubmit="attempt_login(event)">
-        <input type="password" id="passwordInput" placeholder="Enter password..." required>
+
+    <form id="loginForm" onsubmit="attempt_login(event)">
+        <h2> Login:</h2>
+        <input type="username" id="loginUsernameInput" placeholder="Enter Username...">
+        <input type="password" id="loginPasswordInput" placeholder="Enter password..." required>
         <button type="submit">Submit</button>
     </form>
+    <br>
+    <form id="registerForm" onsubmit="register_account(event)">
+        <h2>Register:</h2>
+        <input type="username" id="registerUsernameInput" placeholder="Enter Username..." required>
+        <input type="password" id="registerPasswordInput" placeholder="Enter password..." required>
+        <button type="submit">Submit</button>
 
-    <script src="static/js/script.js"></script>
+    <script src="static/js/login_handling.js"></script>
 </body>
 </html>
 
