@@ -10,16 +10,16 @@
 
     <header>
         <h1 style="display:inline;">Shingles's Awesome Website</h1>
-        <div class="topnav">
+        <nav class="topnav">
             <a class="active" href="/">Home</a>
-            <a class="active" href="message.html">Leave a Message</a>
-            <a class="active" href="canvas.html">Pixel Canvas</a>
+            <a class="active" href="message">Leave a Message</a>
+            <a class="active" href="live_canvas">Pixel Canvas</a>
             {% if session.get('username') %}
                 <a class="active" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
             {% else %}
-                <a class="active" href="login.html">Login</a>
+                <a class="active" href="login">Login</a>
             {% endif %}
-        </div>
+          </nav>
     </header>
 
     <h2 style="text-align: center">Leave a Message</h2>
@@ -42,7 +42,7 @@
         {% endif %}
     </footer>
 
-    <script src="static/js/script.js"></script>
+    <script src="static/js/messages.js"></script>
 
 </body>
 

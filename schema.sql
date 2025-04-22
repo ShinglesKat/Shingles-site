@@ -23,5 +23,5 @@ CREATE TABLE IF NOT EXISTS userinfo (
     username TEXT NOT NULL UNIQUE CHECK(LENGTH(username) >= 3 AND LENGTH(username) <= 16),
     password TEXT NOT NULL,
     creationTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    userType TEXT DEFAULT 'User'
+    userType TEXT DEFAULT 'user'
 );

@@ -32,17 +32,47 @@ app.secret_key = os.getenv('SECRET_KEY')
 def home():
     return render_template('index.html')
 
-@app.route('/message.html')
+@app.route('/message')
 def render_message_page():
     return render_template('message.html')
 
-@app.route('/canvas.html')
-def render_canvas_page():
-    return render_template('canvas.html', cell_side_count=CELL_SIDE_COUNT)
+@app.route('/canvas')
+def render_canvas_landing_page():
+    return render_template('canvas.html')
 
-@app.route('/login.html')
+@app.route('/live_canvas')
+def render_live_canvas_page():
+    return render_template('live_canvas.html', cell_side_count=CELL_SIDE_COUNT)
+
+@app.route('/login')
 def render_login_page():
     return render_template('login.html')
+
+@app.route('/user')
+def render_user_profile():
+    user_id = request.args.get('id')
+
+    if not user_id:
+        return "No user ID provided", 400
+
+    conn = get_db_connections('userinfo.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM userinfo WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+
+    if not user:
+        return "User not found", 404
+
+    return render_template('user_profile.html', user=user)
+
+@app.route('/admin')
+def admin_panel():
+    if session.get('accounttype') != 'admin':
+        return "Access denied", 403
+
+    return render_template('admin.html')
+
 
 def get_db_connections(db_name='database.db') -> sqlite3.Connection:
     conn = sqlite3.connect(db_name)
@@ -262,6 +292,52 @@ def get_pixel_array():
     return jsonify(pixelArray)
 
 
+#Admin related
+@app.route('/api/userinfo')
+def api_get_userinfo():
+    user_id = request.args.get('id')
+
+    if not user_id:
+        return jsonify({"error": "No user ID provided"}), 400
+
+    conn = get_db_connections('userinfo.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM userinfo WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify(dict(user))
+
+@app.route('/api/update_user', methods=['POST'])
+def update_user():
+    if session.get('accounttype') != 'admin':
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json()
+    user_id = data.get('id')
+    new_username = data.get('username')
+    new_type = data.get('userType')
+
+    if not (user_id and new_username and new_type):
+        return jsonify({"error": "Missing fields"}), 400
+
+    conn = get_db_connections('userinfo.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE userinfo SET username = ?, userType = ? WHERE id = ?",
+            (new_username, new_type, user_id)
+        )
+        conn.commit()
+        return jsonify({"status": "User updated successfully"})
+    except sqlite3.Error as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
 
 #Down here be jokes!
 @app.route('/set_brute', methods=['POST'])
@@ -275,7 +351,7 @@ def exit_brute():
     cursor = conn.cursor()
     
     session.pop('brute', None)
-    return redirect(url_for('handle_messages'))
+    return redirect(url_for('home'))
 
 
 #Comment out if not local testing :)

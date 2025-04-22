@@ -19,20 +19,10 @@
           </nav>
     </header>
 
-
-
-    <form id="loginForm" onsubmit="attempt_login(event)">
-        <h2> Login:</h2>
-        <input type="text" id="loginUsernameInput" placeholder="Enter Username...">
-        <input type="password" id="loginPasswordInput" placeholder="Enter password..." required>
-        <button type="submit">Submit</button>
-    </form>
-    <br>
-    <form id="registerForm" onsubmit="register_account(event)">
-        <h2>Register:</h2>
-        <input type="text" id="registerUsernameInput" placeholder="Enter Username..." required>
-        <input type="password" id="registerPasswordInput" placeholder="Enter password..." required>
-        <button type="submit">Submit</button>
+    <h1>Welcome to {{ user.username }}'s profile!</h1>
+    <p>User ID: {{ user.id }}</p>
+    <p>Account Type: {{ user.userType }}</p>
+    <p>Creation date: {{user.creationTime}}</p>
 
     <script src="static/js/login_handling.js"></script>
 </body>
