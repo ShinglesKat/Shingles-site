@@ -119,7 +119,7 @@ def get_messages():
     messages_list = []
     for msg in messages:
         msg_dict = dict(msg)
-        if session.get('admin'):
+        if session.get('accounttype') == 'admin':
             msg_dict['can_delete'] = True
         messages_list.append(msg_dict)
 

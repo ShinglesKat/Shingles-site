@@ -55,7 +55,7 @@
 
 
     <footer>
-        {% if session.get('admin') %}
+        {% if session.get('accounttype') == 'admin' %}
             <button id="clearCanvasBtn">Clear Canvas</button>
         {% endif %}
     </footer>
