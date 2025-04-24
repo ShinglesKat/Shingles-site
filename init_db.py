@@ -62,3 +62,21 @@ def init_userinfo_db():
         print(f"Error occurred: {e}")
     finally:
         connection.close()
+
+def init_userdrawings_db():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
+
+    print(f"Current working directory: {os.getcwd()}")
+
+    connection = sqlite3.connect('userdrawings.db')
+    try:
+        with open('schema.sql') as f:
+            connection.executescript(f.read())
+
+        cursor = connection.cursor()
+        connection.commit()
+    except sqlite3.Error as e:
+        print(f"Error occurred: {e}")
+    finally:
+        connection.close()

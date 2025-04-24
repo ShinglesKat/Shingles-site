@@ -67,6 +67,8 @@ body{
     pointer-events: none;
     position: absolute;
     border: 1px solid rgba(0,0,0,0.1);
+    top: 0;
+    left: 0;
 }
 
 #guide div {
@@ -113,4 +115,90 @@ body{
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+}
+
+#recentDrawings {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* Create 5 equal-width columns */
+    grid-template-rows: repeat(2, 1fr); /* Create 2 rows */
+    gap: 20px;  /* Add space between the grid items */
+    justify-items: center; /* Center the items horizontally within their grid cell */
+    margin-top: 20px;
+}
+
+
+/* MINI CANVAS */
+.drawing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.drawing-container canvas {
+    border: 1px solid #ccc;
+    background-color: white;
+    display: block;
+    margin: 0 auto;
+}
+
+.drawing-container p {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.drawing-name {
+    font-weight: bold;
+    margin: 4px 0 0;
+}
+
+.drawing-user {
+    font-style: italic;
+    font-size: 0.9em;
+    margin: 0 0 8px;
+}
+
+
+/* Modal box */
+
+.modal.hidden {
+  display: none;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 300px;
+  max-width: 90%;
+}
+
+.modal-content input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+}
+
+.checkbox-wrapper {
+  margin-top: 10px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
 }

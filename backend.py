@@ -25,6 +25,11 @@ if not os.path.exists("userinfo.db"):
     from init_db import init_userinfo_db
     init_userinfo_db()
 
+if not os.path.exists("userdrawings.db"):
+    print("Pre-existing userdrawings database not found...")
+    from init_db import init_userdrawings_db
+    init_userdrawings_db()
+
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
     
@@ -53,7 +58,7 @@ def render_user_profile():
     user_id = request.args.get('id')
 
     if not user_id:
-        return "No user ID provided", 400
+        return jsonify({"error": "No user ID provided"}), 400
 
     conn = get_db_connections('userinfo.db')
     cursor = conn.cursor()
@@ -62,14 +67,14 @@ def render_user_profile():
     conn.close()
 
     if not user:
-        return "User not found", 404
+        return jsonify({"error": "User not found"}), 404
 
     return render_template('user_profile.html', user=user)
 
 @app.route('/admin')
 def admin_panel():
     if session.get('accounttype') != 'admin':
-        return "Access denied", 403
+        return jsonify({"error": "Access denied"}), 403
 
     return render_template('admin.html')
 
@@ -78,6 +83,16 @@ def get_db_connections(db_name='database.db') -> sqlite3.Connection:
     conn = sqlite3.connect(db_name)
     conn.row_factory = sqlite3.Row
     return conn
+
+@app.route('/get_session_data', methods=['GET'])
+def get_session_data():
+    if 'userid' in session and 'username' in session:
+        return jsonify({
+            'userid': session['userid'],
+            'username': session['username']
+        })
+    else:
+        return jsonify({'error': 'User not logged in'}), 401
 
 @app.route('/message/post_message', methods=['POST'])
 def handle_messages() -> jsonify:
@@ -185,9 +200,10 @@ def attempt_login():
     if user:
         session['username'] = username
         session['accounttype'] = user['userType']
+        session['userid'] = user['id']
         return redirect(url_for('home'))
     else:
-        return "Invalid credentials", 401
+        return jsonify({"error": "Invalid credentials"}), 401
 
 
 @app.route('/logout')
@@ -200,14 +216,13 @@ def logout():
     return redirect(url_for('home'))
 
 
-#CANVAS
+#LIVE CANVAS
 CELL_SIDE_COUNT = 50
 DEFAULT_COLOUR = "#ffffff"
 saveInterval = 300
 pendingUpdates = []
 pixelArray=[]
 
-        
 def load_pixel_array():
     arr = [[DEFAULT_COLOUR for _ in range(CELL_SIDE_COUNT)] for _ in range(CELL_SIDE_COUNT)]
     conn = get_db_connections('pixels.db')
@@ -237,12 +252,13 @@ def update_pixel_db(pixelArray):
         x, y, colour = pixel
 
         #Update the color for the specific pixel (x, y)
-        cursor.execute("""
-            INSERT INTO pixels (x, y, colour) 
-            VALUES (?, ?, ?) 
-            ON CONFLICT(x, y) 
-            DO UPDATE SET colour = ?;
-        """, (x, y, colour, colour))
+        cursor.execute("SELECT 1 FROM pixels WHERE x = ? AND y = ?", (x, y))
+        exists = cursor.fetchone()
+
+        if exists:
+            cursor.execute("UPDATE pixels SET colour = ? WHERE x = ? AND y = ?", (colour, x, y))
+        else:
+            cursor.execute("INSERT INTO pixels (x, y, colour) VALUES (?, ?, ?)", (x, y, colour))
 
     conn.commit()
     conn.close()
@@ -291,6 +307,75 @@ def clear_canvas():
 def get_pixel_array():
     return jsonify(pixelArray)
 
+
+#REGULAR CANVAS
+
+
+@app.route('/upload', methods=['POST'])
+def upload_pixel_canvas():
+    data = request.get_json()
+
+    # Retrieve required fields
+    user_id = data.get('user_id')
+    username = data.get('username')
+    content = data.get('content')
+    piece_name = data.get('piece_name')
+    private = data.get('private')
+
+    if not all([user_id, username, content, piece_name, private is not None]):
+        return jsonify({"error": "Missing fields"}), 400
+
+    conn = get_db_connections('userdrawings.db')
+    cursor = conn.cursor()
+
+    try:
+        #Check if drawing with the same name exists for the same user
+        cursor.execute("SELECT * FROM userdrawings WHERE user_id = ? AND piece_name = ?", (user_id, piece_name))
+        existing_piece = cursor.fetchone()
+
+        if existing_piece:
+            cursor.execute("""
+                UPDATE userdrawings 
+                SET content = ?, private = ?, creationTime = CURRENT_TIMESTAMP 
+                WHERE user_id = ? AND piece_name = ?
+            """, (content, private, user_id, piece_name))
+        else:
+            cursor.execute("""
+                INSERT INTO userdrawings (user_id, username, piece_name, content, private) 
+                VALUES (?, ?, ?, ?, ?)
+            """, (user_id, username, piece_name, content, private))
+
+        conn.commit()
+        return jsonify({"status": "Canvas saved/updated successfully!"}), 200
+
+    except sqlite3.Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+
+    finally:
+        conn.close()
+
+
+@app.route('/retrieve_latest', methods=['GET'])
+def retrieve_latest():
+    conn = get_db_connections('userdrawings.db')
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT * FROM userdrawings
+        WHERE private = 0
+        ORDER BY creationTime DESC
+        LIMIT 5
+    """)
+    
+    drawings = cursor.fetchall()
+    conn.close()
+
+    # Return the drawings as a list of dictionaries
+    drawings_list = []
+    for drawing in drawings:
+        drawing_dict = dict(drawing)
+        drawings_list.append(drawing_dict)
+
+    return jsonify(drawings_list)
 
 #Admin related
 @app.route('/api/userinfo')

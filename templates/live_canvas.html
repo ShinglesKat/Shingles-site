@@ -19,7 +19,6 @@
           </nav>
     </header>
     
-    <!-- Scrollable Canvas Container -->
     <div id="canvasContainer">
         <div id="guide"></div>
         <canvas width="750" height="750" id="canvas"></canvas>
@@ -51,15 +50,17 @@
             Be good people - Shingles
         </div>
     </div>
-    
+    <a class="active" href="canvas">Switch to solo drawing!</a>
 
 
     <footer>
         {% if session.get('accounttype') == 'admin' %}
             <button id="clearCanvasBtn">Clear Canvas</button>
         {% endif %}
+
+        
     </footer>
 
-    <script src="static/js/pixel_canvas.js" defer></script>
+    <script src="static/js/live_pixel_canvas.js" defer></script>
 </body>
 </html>
