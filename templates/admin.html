@@ -41,7 +41,7 @@
     <div id="allUsers">
         <h3>All users:</h3>
         {% for user in users %}
-            <div>{{ user }}</div><br>
+            <div>{{ user['username'] }}</div><br>
         {% endfor %}
     </div>
     
