@@ -20,7 +20,7 @@ CREATE TABLE pixels (
 
 CREATE TABLE userinfo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE CHECK(LENGTH(username) >= 3 AND LENGTH(username) <= 16),
+    username TEXT NOT NULL UNIQUE COLLATE NOCASE CHECK(LENGTH(username) >= 3 AND LENGTH(username) <= 16),
     password TEXT NOT NULL,
     creationTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     userType TEXT DEFAULT 'user',
