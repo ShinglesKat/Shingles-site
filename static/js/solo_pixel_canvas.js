@@ -219,7 +219,7 @@ async function saveCanvasData() {
             piece_name: pieceName,
             content: json,
             private: isPrivate,
-            piece_id: currentPieceId  // May be null for new
+            piece_id: currentPieceId
         };
 
         const saveResponse = await fetch('/upload', {
@@ -232,7 +232,6 @@ async function saveCanvasData() {
 
         const canvasSaveResponse = await saveResponse.json();
 
-        // Get the ID returned by the backend
         if (canvasSaveResponse.piece_id) {
             currentPieceId = canvasSaveResponse.piece_id;
         }
@@ -248,7 +247,6 @@ async function loadCanvasData(drawing, container) {
     const canvasContainer = document.createElement('div');
     canvasContainer.classList.add('drawing-container');
 
-    // Create clickable link
     const drawingLink = document.createElement('a');
     drawingLink.href = `/drawing?id=${drawing.id}`;
     drawingLink.target = "_blank";
@@ -271,7 +269,6 @@ async function loadCanvasData(drawing, container) {
         context.fillRect(x * cellPixelLength, y * cellPixelLength, cellPixelLength, cellPixelLength);
     });
 
-    // Put the canvas inside the link
     drawingLink.appendChild(miniCanvas);
 
     const nameLabel = document.createElement('p');
@@ -288,7 +285,6 @@ async function loadCanvasData(drawing, container) {
     canvasContainer.appendChild(nameLabel);
     canvasContainer.appendChild(userLabel);
 
-    // Append the newly created canvas to the provided container
     container.appendChild(canvasContainer);
 }
 
@@ -310,9 +306,8 @@ async function loadRecentDrawings() {
             return;
         }
 
-        // Call loadCanvasData for each drawing to display it
         for (const drawing of drawings) {
-            await loadCanvasData(drawing, drawingsContainer);  // Pass the container as argument
+            await loadCanvasData(drawing, drawingsContainer);
         }
     } catch (err) {
         console.error('Error loading recent drawings:', err);

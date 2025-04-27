@@ -1,13 +1,90 @@
 /*
-
+Shoutout chatgpt for helping me with css cause I am badddd at it lol
 . is class
 # is id
 
 */
-header{
-    margin: 0;
-    padding: 0.5rem 0;
+header {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0;
+    background-color: #e3a157;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow */
 }
+
+/* Separator line */
+.header-separator {
+    width: 100px;                   /* Length of the line */
+    border: 0;
+    border-top: 3px solid #fff;     /* Thickness and color */
+    margin: 0.5rem auto;            /* Vertical spacing and centering */
+}
+
+/* Header Title */
+header h1 {
+    margin: 0;
+    color: #fff;
+    font-family: 'Baloo 2', cursive;
+    font-size: 2.5rem;               /* Slightly larger font size */
+    text-align: center;
+    letter-spacing: 1px;             /* Small letter spacing for a cleaner look */
+}
+
+/* Navigation Styling */
+nav.topnav ul {
+    display: flex;
+    justify-content: space-around;  /* Distribute items evenly */
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    width: 100%;
+}
+
+nav.topnav li {
+    display: inline-block;
+    position: relative;             /* For positioning effects */
+}
+
+nav.topnav a {
+    display: block;
+    color: white;
+    text-align: center;
+    padding: 10px 30px;             /* Slightly larger padding for better clickability */
+    text-decoration: none;
+    font-size: 1.1rem;
+    transition: all 0.3s ease-in-out; /* Smooth hover transition */
+}
+
+/* Hover effect on links */
+nav.topnav a:hover {
+    transform: translateY(-3px);     /* Slight movement on hover for effect */
+}
+
+/* Active state for the current page link */
+nav.topnav a.active {
+    border-radius: 2px;              /* Rounded corners for active link */
+    font-weight: bold;               /* Make active link text bold */
+}
+
+/* Responsive Design: Mobile View */
+@media screen and (max-width: 768px) {
+    nav.topnav ul {
+        flex-direction: column;        /* Stack the nav items vertically */
+        align-items: center;
+    }
+
+    nav.topnav li {
+        width: 100%;                    /* Make each list item take full width */
+        text-align: center;             /* Center text */
+    }
+
+    header h1 {
+        font-size: 2rem;               /* Make the title smaller on smaller screens */
+    }
+}
+
 
 footer{
     position:fixed;
@@ -163,42 +240,71 @@ body{
 /* Modal box */
 
 .modal.hidden {
-  display: none;
+    display: none;
 }
 
 .modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
 }
 
 .modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  width: 300px;
-  max-width: 90%;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    max-width: 90%;
 }
 
 .modal-content input[type="text"] {
-  width: 100%;
-  padding: 8px;
-  margin-top: 10px;
+    width: 100%;
+    padding: 8px;
+    margin-top: 10px;
 }
 
 .checkbox-wrapper {
-  margin-top: 10px;
+    margin-top: 10px;
 }
 
 .modal-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.drawing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hover Effect for Drawing Container */
+.drawing-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Name Label */
+.drawing-name {
+    font-weight: bold;
+    margin: 4px 0 0;
+    font-size: 16px;
+    color: #333;
+    text-align: center;
 }

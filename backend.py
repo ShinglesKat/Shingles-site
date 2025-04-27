@@ -93,22 +93,51 @@ def render_user_drawing():
         drawing_content_json = json.loads(drawing_content)
     except ValueError as e:
         return jsonify({"error": f"Failed to parse drawing content: {str(e)}"}), 400
-    
-    return render_template('user_drawing.html', drawing=drawing, drawing_content_json=drawing_content_json)
+
+    return render_template(
+        'user_drawing.html',
+        drawing=drawing,
+        drawing_content_json=drawing_content_json,
+        session_userid=session.get('userid'),
+        session_accounttype=session.get('accounttype')
+    )
 
 
-@app.route('/admin')
+@app.route('/admin', methods=['GET'])
 def admin_panel():
     if session.get('accounttype') != 'admin':
         return jsonify({"error": "Access denied"}), 403
 
-    return render_template('admin.html')
+    conn = sqlite3.connect('userinfo.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM userinfo")
+    users = cursor.fetchall()
+    return render_template('admin.html', users=users)
 
 
 def get_db_connections(db_name='database.db') -> sqlite3.Connection:
     conn = sqlite3.connect(db_name)
     conn.row_factory = sqlite3.Row
     return conn
+
+@app.route('/api/get_user_drawings/<int:user_id>')
+def get_user_drawing(user_id):
+    conn = get_db_connections('userdrawings.db')
+    cursor = conn.cursor()
+    drawings = cursor.execute('SELECT * FROM userdrawings WHERE user_id = ?', (user_id,)).fetchall()
+    
+    drawings_list = []
+    for drawing in drawings:
+        drawing_dict = dict(drawing)
+        try:
+            drawing_dict['drawing_content_json'] = json.loads(drawing_dict['content'])
+        except ValueError:
+            drawing_dict['drawing_content_json'] = []
+        drawings_list.append(drawing_dict)
+    
+    conn.close()
+    return jsonify(drawings_list)
+    
 
 @app.route('/get_session_data', methods=['GET'])
 def get_session_data():
@@ -119,7 +148,7 @@ def get_session_data():
         })
     else:
         return jsonify({'error': 'User not logged in'}), 401
-
+    
 @app.route('/message/post_message', methods=['POST'])
 def handle_messages() -> jsonify:
     conn = get_db_connections()
@@ -169,7 +198,7 @@ def get_messages():
 #For use in deleting comments        
 @app.route('/delete/<int:message_id>', methods=['POST'])
 def delete_message(message_id):
-    if not session.get('admin'):
+    if session.get('accounttype') != 'admin':
         return jsonify({"error": "You are not authorized to perform this action!"}), 403
     
     conn = get_db_connections()
@@ -266,7 +295,7 @@ def flush_pending_updates():
     while True:
         time.sleep(120)
         update_pixel_db(pendingUpdates)
-        pendingUpdates = []
+        pendingUpdates.clear()
         print("Updated Database... (pixels.db)")
 Thread(target=flush_pending_updates, daemon=True).start()
 
@@ -426,6 +455,48 @@ def retrieve_latest():
     return jsonify(drawings_list)
 
 #Admin related
+@app.route('/delete_drawing/<int:drawing_id>', methods=['POST'])
+def delete_drawing(drawing_id):
+    if not session.get('accounttype'):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    conn = get_db_connections('userdrawings.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM userdrawings WHERE id = ?", (drawing_id,))
+    drawing = cursor.fetchone()
+
+    if not drawing:
+        conn.close()
+        return jsonify({"error": "Drawing not found"}), 404
+
+    if session.get('accounttype') != 'admin' and session.get('userid') != drawing['user_id']:
+        conn.close()
+        return jsonify({"error": "Unauthorized"}), 403
+
+    cursor.execute("DELETE FROM userdrawings WHERE id = ?", (drawing_id,))
+    conn.commit()
+    conn.close()
+    
+    conn = get_db_connections('userinfo.db')
+    cursor = conn.cursor()
+    owner_id = drawing['user_id']
+    
+    cursor.execute("SELECT creationsIDs FROM userinfo WHERE id = ?", (owner_id,))
+    user_info = cursor.fetchone()
+    
+    if user_info:
+        creationsIDs = json.loads(user_info['creationsIDs'])
+        if drawing_id in creationsIDs:
+            creationsIDs.remove(drawing_id)
+            updated_creationsIDs = json.dumps(creationsIDs)
+            cursor.execute("UPDATE userinfo SET creationsIDs = ? WHERE id = ?",(updated_creationsIDs, owner_id))
+            conn.commit()
+    conn.close()
+            
+
+    return redirect(url_for('home'))
+
+
 @app.route('/api/userinfo')
 def api_get_userinfo():
     user_id = request.args.get('id')
