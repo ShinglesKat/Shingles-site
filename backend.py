@@ -108,7 +108,7 @@ def admin_panel():
     if session.get('accounttype') != 'admin':
         return jsonify({"error": "Access denied"}), 403
 
-    conn = sqlite3.connect('userinfo.db')
+    conn = get_db_connections('userinfo.db')
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM userinfo")
     users = cursor.fetchall()
