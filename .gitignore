@@ -2,3 +2,4 @@ backend/
 *.db
 __pycache__
 .env
+databases

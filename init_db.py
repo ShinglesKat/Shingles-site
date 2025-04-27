@@ -4,9 +4,12 @@ import os
 
 def init_database(db_name, initialization_func=None):
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(script_dir)
+    databases_dir = os.path.join(script_dir, 'databases')
 
-    db_path = os.path.join(script_dir, db_name)
+    # Create the 'databases' folder if it doesn't exist
+    os.makedirs(databases_dir, exist_ok=True)
+
+    db_path = os.path.join(databases_dir, db_name)
 
     if not os.path.exists(db_path):
         print(f"{db_name} not found, initializing...")
