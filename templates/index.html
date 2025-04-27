@@ -9,16 +9,26 @@
 
 <body>
     <header>
-        <h1 style="display:inline;">Shingles's Awesome We</h1><h1 style="display:inline;" onclick="incrementBClicks()">b<h1 style="display:inline;">site</h1>
+        <h1>Shingles's Awesome We<span class="clickable-b" onclick="incrementBClicks()">b</span>site</h1>
+        <hr class="header-separator"/>
         <nav class="topnav">
-            <a class="active" href="/">Home</a>
-            <a class="active" href="message">Leave a Message</a>
-            <a class="active" href="live_canvas">Pixel Canvas</a>
-            {% if session.get('username') %}
-                <a class="active" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
-            {% else %}
-                <a class="active" href="login">Login</a>
-            {% endif %}
+            <ul>
+                <li><a class="active" href="/">Home</a></li>
+                <li><a class="active" href="message">Leave a Message</a></li>
+                <li><a class="active" href="live_canvas">Pixel Canvas</a></li>
+                <li>
+                {% if session.get('username') %}
+                    <a class="active" href="{{ url_for('logout') }}" onclick="return confirmLogout()">Logout ({{ session['username'] }})</a>
+                    <script>
+                        function confirmLogout() {
+                            return confirm("Are you sure you want to log out?");
+                        }
+                    </script>
+                {% else %}
+                    <a class="active" href="login">Login</a>
+                {% endif %}
+                </li>
+            </ul>
         </nav>
     </header>
     

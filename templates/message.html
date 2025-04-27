@@ -7,19 +7,28 @@
 </head>
 
 <body>
-
     <header>
         <h1 style="display:inline;">Shingles's Awesome Website</h1>
+        <hr class="header-separator"/>
         <nav class="topnav">
-            <a class="active" href="/">Home</a>
-            <a class="active" href="message">Leave a Message</a>
-            <a class="active" href="live_canvas">Pixel Canvas</a>
-            {% if session.get('username') %}
-                <a class="active" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
-            {% else %}
-                <a class="active" href="login">Login</a>
-            {% endif %}
-          </nav>
+            <ul>
+                <li><a class="active" href="/">Home</a></li>
+                <li><a class="active" href="message">Leave a Message</a></li>
+                <li><a class="active" href="live_canvas">Pixel Canvas</a></li>
+                <li>
+                {% if session.get('username') %}
+                    <a class="active" href="{{ url_for('logout') }}" onclick="return confirmLogout()">Logout ({{ session['username'] }})</a>
+                    <script>
+                        function confirmLogout() {
+                            return confirm("Are you sure you want to log out?");
+                        }
+                    </script>
+                {% else %}
+                    <a class="active" href="login">Login</a>
+                {% endif %}
+                </li>
+            </ul>
+        </nav>
     </header>
 
     <h2 style="text-align: center">Leave a Message</h2>

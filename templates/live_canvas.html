@@ -7,19 +7,28 @@
 <body>
     <header>
         <h1 style="display:inline;">Shingles's Awesome Website</h1>
+        <hr class="header-separator"/>
         <nav class="topnav">
-            <a class="active" href="/">Home</a>
-            <a class="active" href="message">Leave a Message</a>
-            <a class="active" href="live_canvas">Pixel Canvas</a>
-            {% if session.get('username') %}
-                <a class="active" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
-            {% else %}
-                <a class="active" href="login">Login</a>
-            {% endif %}
-          </nav>
+            <ul>
+                <li><a class="active" href="/">Home</a></li>
+                <li><a class="active" href="message">Leave a Message</a></li>
+                <li><a class="active" href="live_canvas">Pixel Canvas</a></li>
+                <li>
+                {% if session.get('username') %}
+                    <a class="active" href="{{ url_for('logout') }}" onclick="return confirmLogout()">Logout ({{ session['username'] }})</a>
+                    <script>
+                        function confirmLogout() {
+                            return confirm("Are you sure you want to log out?");
+                        }
+                    </script>
+                {% else %}
+                    <a class="active" href="login">Login</a>
+                {% endif %}
+                </li>
+            </ul>
+        </nav>
     </header>
     
-    <!-- Scrollable Canvas Container -->
     <div id="canvasContainer">
         <div id="guide"></div>
         <canvas width="750" height="750" id="canvas"></canvas>
@@ -51,15 +60,17 @@
             Be good people - Shingles
         </div>
     </div>
-    
+    <a class="active" href="canvas">Switch to solo drawing!</a>
 
 
     <footer>
         {% if session.get('accounttype') == 'admin' %}
             <button id="clearCanvasBtn">Clear Canvas</button>
         {% endif %}
+
+        
     </footer>
 
-    <script src="static/js/pixel_canvas.js" defer></script>
+    <script src="static/js/live_pixel_canvas.js" defer></script>
 </body>
 </html>

@@ -7,20 +7,89 @@
 <body>
     <header>
         <h1 style="display:inline;">Shingles's Awesome Website</h1>
+        <hr class="header-separator"/>
         <nav class="topnav">
-            <a class="active" href="/">Home</a>
-            <a class="active" href="message">Leave a Message</a>
-            <a class="active" href="live_canvas">Pixel Canvas</a>
-            {% if session.get('username') %}
-                <a class="active" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
-            {% else %}
-                <a class="active" href="login">Login</a>
-            {% endif %}
+            <ul>
+                <li><a class="active" href="/">Home</a></li>
+                <li><a class="active" href="message">Leave a Message</a></li>
+                <li><a class="active" href="live_canvas">Pixel Canvas</a></li>
+                <li>
+                {% if session.get('username') %}
+                    <a class="active" href="{{ url_for('logout') }}" onclick="return confirmLogout()">Logout ({{ session['username'] }})</a>
+                    <script>
+                        function confirmLogout() {
+                            return confirm("Are you sure you want to log out?");
+                        }
+                    </script>
+                {% else %}
+                    <a class="active" href="login">Login</a>
+                {% endif %}
+                </li>
+            </ul>
         </nav>
     </header>
 
+    <h2>Welcome to the canvas homepage!</h2>
+    <div id="canvasContainer">
+        <div id="guide"></div>
+        <canvas width="750" height="750" id="canvas"></canvas>
+    </div>
 
-    <script src="static/js/login_handling.js"></script>
+    <div class="control-panel">
+        <div>
+            <label for="colourInput">Set Colour</label><br />
+            <input type="color" id="colourInput" />
+        </div>
+
+        <div>
+            <label for="toggleGuide">Show Guide:</label><br />
+            <input type="checkbox" id="toggleGuide" checked />
+        </div>
+
+        <div class="preset-colours">
+            <button class="colour-btn" data-colour="#ff0000" style="background: #ff0000;">Red</button>
+            <button class="colour-btn" data-colour="#ffa500" style="background: #ffa500;">Orange</button>
+            <button class="colour-btn" data-colour="#ffff00" style="background: #ffff00;">Yellow</button>
+            <button class="colour-btn" data-colour="#00ff00" style="background: #00ff00;">Green</button>
+            <button class="colour-btn" data-colour="#0000ff" style="background: #0000ff; color: white;">Blue</button>
+            <button class="colour-btn" data-colour="#4b0082" style="background: #4b0082; color: white;">Indigo</button>
+            <button class="colour-btn" data-colour="#ee82ee" style="background: #ee82ee;">Violet</button>
+            <button class="colour-btn" data-colour="#000000" style="background: #000000; color: white;">Black</button>
+            <button class="colour-btn" data-colour="#ffffff" style="background: #ffffff; border: 1px solid #ccc;">White</button>
+            Eyedropper = ctrl + left click :)<br>
+            Be good people - Shingles
+        </div>
+    </div>
+
+    <div>
+        <button id="clearCanvasBtn">Clear Canvas</button>
+        <button id="saveCanvasBtn">Save Canvas</button>
+        <button id="loadCanvasBtn">Load Canvas</button>
+    </div>
+
+    <h3>Recently uploaded:</h3>
+    <div id="recentDrawings"></div>
+
+
+    <div id="customModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Save Your Canvas</h2>
+            <p>Name and privacy:</p>
+            <input type="text" id="canvasNameInput" placeholder="Canvas name (3–16 characters)">
+    
+            <div class="checkbox-wrapper">
+                <input type="checkbox" id="privateCheckbox">
+                <label for="privateCheckbox">Make this canvas private</label>
+            </div>
+
+            <div class="modal-actions">
+                <button id="cancelModalBtn">Cancel</button>
+                <button id="confirmModalBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/js/solo_pixel_canvas.js" defer></script>
 </body>
 </html>
 
