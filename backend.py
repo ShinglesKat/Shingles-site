@@ -11,22 +11,22 @@ load_dotenv()
 print("SECRET_KEY:", os.getenv('SECRET_KEY'))
 print("ADMIN_PASSWORD:", os.getenv('ADMIN_PASSWORD'))
 
-if not os.path.exists("database.db"):
+if not os.path.exists("database/database.db"):
     print("Pre-existing database not found...")
     from init_db import init_db
     init_db()
 
-if not os.path.exists("pixels.db"):
+if not os.path.exists("database/pixels.db"):
     print("Pre-existing pixel database not found...")
     from init_db import init_pixel_db
     init_pixel_db()
     
-if not os.path.exists("userinfo.db"):
+if not os.path.exists("database/userinfo.db"):
     print("Pre-existing userinfo database not found...")
     from init_db import init_userinfo_db
     init_userinfo_db()
 
-if not os.path.exists("userdrawings.db"):
+if not os.path.exists("database/userdrawings.db"):
     print("Pre-existing userdrawings database not found...")
     from init_db import init_userdrawings_db
     init_userdrawings_db()
