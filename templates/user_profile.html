@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Shingles's amazing website</title>
+    <title>{{ user.username }}'s Profile - Shingles's Amazing Website</title>
     <link rel="stylesheet" href="static/css/styles.css">
 </head>
+
 <body>
     <header>
         <h1 style="display:inline;">Shingles's Awesome Website</h1>
@@ -16,15 +17,17 @@
             {% else %}
                 <a class="active" href="login">Login</a>
             {% endif %}
-          </nav>
+        </nav>
     </header>
 
     <h1>Welcome to {{ user.username }}'s profile!</h1>
     <p>User ID: {{ user.id }}</p>
     <p>Account Type: {{ user.userType }}</p>
-    <p>Creation date: {{user.creationTime}}</p>
+    <p>Creation date: {{ user.creationTime }}</p>
 
-    <script src="static/js/login_handling.js"></script>
+    <h3> Created drawings </h3>
+    <p>Created Drawings: {{ user.creationsIDs }}</p>
+    <div id="drawings" class="drawing-row"></div>
+
 </body>
 </html>
-

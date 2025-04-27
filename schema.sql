@@ -29,7 +29,7 @@ CREATE TABLE userinfo (
 
 CREATE TABLE userdrawings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    piece_name TEXT NOT NULL CHECK(LENGTH(piece_name) >= 3 AND LENGTH(piece_name) <= 16),
+    piece_name TEXT NOT NULL CHECK(LENGTH(piece_name) >= 3 AND LENGTH(piece_name) <= 30),
     user_id INTEGER NOT NULL,
     username TEXT NOT NULL,
     creationTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

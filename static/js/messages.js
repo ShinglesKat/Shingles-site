@@ -13,25 +13,21 @@ async function add_message(event){
             body: `username=${encodeURIComponent(username)}&content=${encodeURIComponent(content)}`
         });
 
-        // Check if response is successful
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
         }
 
-        // Parse the JSON response
         const result = await response.json();
         console.log(result);
-
-        // Clear form after submission
         document.getElementById('commentForm').reset();
 
-        // Show success message and hide after 3 seconds
+        //Show success message and hide after 3 seconds
         document.getElementById("successMessage").style.display = "block";
         setTimeout(() => { 
             document.getElementById("successMessage").style.display = "none"; 
         }, 3000);
 
-        // Retrieve updated messages
+        
         retrieve_messages();
 
     } catch (error) {

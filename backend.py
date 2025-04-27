@@ -1,6 +1,7 @@
 import sqlite3
 from threading import Lock, Thread
 import time
+import json
 from flask import Flask, session, redirect, request, jsonify, render_template, url_for
 from markupsafe import escape
 import os
@@ -70,6 +71,31 @@ def render_user_profile():
         return jsonify({"error": "User not found"}), 404
 
     return render_template('user_profile.html', user=user)
+
+@app.route('/drawing')
+def render_user_drawing():
+    drawing_id = request.args.get('id')
+
+    if not drawing_id:
+        return jsonify({"error": "No drawing ID provided"}), 400
+
+    conn = get_db_connections('userdrawings.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM userdrawings WHERE id = ?", (drawing_id,))
+    drawing = cursor.fetchone()
+    conn.close()
+
+    if not drawing:
+        return jsonify({"error": "Drawing not found"}), 404
+
+    drawing_content = drawing['content']
+    try:
+        drawing_content_json = json.loads(drawing_content)
+    except ValueError as e:
+        return jsonify({"error": f"Failed to parse drawing content: {str(e)}"}), 400
+    
+    return render_template('user_drawing.html', drawing=drawing, drawing_content_json=drawing_content_json)
+
 
 @app.route('/admin')
 def admin_panel():
@@ -310,50 +336,72 @@ def get_pixel_array():
 
 #REGULAR CANVAS
 
-
 @app.route('/upload', methods=['POST'])
 def upload_pixel_canvas():
     data = request.get_json()
-
-    # Retrieve required fields
+    print("Received data:", data)  # Debugging
     user_id = data.get('user_id')
     username = data.get('username')
     content = data.get('content')
     piece_name = data.get('piece_name')
     private = data.get('private')
+    piece_id = data.get('piece_id')
 
     if not all([user_id, username, content, piece_name, private is not None]):
         return jsonify({"error": "Missing fields"}), 400
 
     conn = get_db_connections('userdrawings.db')
     cursor = conn.cursor()
-
+    new_piece = False
     try:
-        #Check if drawing with the same name exists for the same user
-        cursor.execute("SELECT * FROM userdrawings WHERE user_id = ? AND piece_name = ?", (user_id, piece_name))
+        #Check if drawing with same name exists
+        cursor.execute("SELECT id FROM userdrawings WHERE user_id = ? AND piece_name = ?", (user_id, piece_name))
         existing_piece = cursor.fetchone()
 
         if existing_piece:
+            drawing_id = existing_piece['id']
             cursor.execute("""
                 UPDATE userdrawings 
                 SET content = ?, private = ?, creationTime = CURRENT_TIMESTAMP 
-                WHERE user_id = ? AND piece_name = ?
-            """, (content, private, user_id, piece_name))
+                WHERE id = ?
+            """, (content, private, drawing_id))
         else:
+            new_piece = True
             cursor.execute("""
                 INSERT INTO userdrawings (user_id, username, piece_name, content, private) 
                 VALUES (?, ?, ?, ?, ?)
             """, (user_id, username, piece_name, content, private))
+            drawing_id = cursor.lastrowid
 
         conn.commit()
-        return jsonify({"status": "Canvas saved/updated successfully!"}), 200
-
-    except sqlite3.Error as e:
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-
-    finally:
         conn.close()
 
+        #if new drawing, add it into user's created
+        if new_piece:
+            conn = get_db_connections('userinfo.db')
+            cursor = conn.cursor()
+            cursor.execute("SELECT creationsIDs FROM userinfo WHERE id = ?", (user_id,))
+            result = cursor.fetchone()
+
+            if result:
+                creations_list = json.loads(result['creationsIDs']) if result['creationsIDs'] else []
+                creations_list.append(drawing_id)
+                updated_creations_json = json.dumps(creations_list)
+
+                cursor.execute("""
+                    UPDATE userinfo
+                    SET creationsIDs = ?
+                    WHERE id = ?
+                """, (updated_creations_json, user_id))
+                conn.commit()
+            conn.close()
+
+        return jsonify({
+            "message": "Canvas saved/updated successfully!",
+            "piece_id": drawing_id
+        }), 200
+    except sqlite3.Error as e:
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
 
 @app.route('/retrieve_latest', methods=['GET'])
 def retrieve_latest():
@@ -369,7 +417,7 @@ def retrieve_latest():
     drawings = cursor.fetchall()
     conn.close()
 
-    # Return the drawings as a list of dictionaries
+    #Return the drawings as a list of dictionaries
     drawings_list = []
     for drawing in drawings:
         drawing_dict = dict(drawing)
@@ -404,18 +452,20 @@ def update_user():
     data = request.get_json()
     user_id = data.get('id')
     new_username = data.get('username')
+    new_password = data.get('hashed_password')
     new_type = data.get('userType')
+    new_drawings = data.get('userDrawings')
 
-    if not (user_id and new_username and new_type):
+    if not (user_id and new_username and new_password and new_type and new_drawings):
         return jsonify({"error": "Missing fields"}), 400
 
     conn = get_db_connections('userinfo.db')
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "UPDATE userinfo SET username = ?, userType = ? WHERE id = ?",
-            (new_username, new_type, user_id)
-        )
+            "UPDATE userinfo SET username = ?, password = ?, userType = ?, creationsIDs = ? WHERE id = ?",
+            (new_username, new_password, new_type, new_drawings, user_id))
+
         conn.commit()
         return jsonify({"status": "User updated successfully"})
     except sqlite3.Error as e:
