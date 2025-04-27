@@ -12,7 +12,7 @@
             <ul>
                 <li><a class="active" href="/">Home</a></li>
                 <li><a class="active" href="message">Leave a Message</a></li>
-                <li><a class="active" href="live_canvas">Pixel Canvas</a></li>
+                <li><a class="active" href="canvas">Pixel Canvas</a></li>
                 <li>
                 {% if session.get('username') %}
                     <a class="active" href="{{ url_for('logout') }}" onclick="return confirmLogout()">Logout ({{ session['username'] }})</a>

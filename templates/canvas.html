@@ -12,7 +12,7 @@
             <ul>
                 <li><a class="active" href="/">Home</a></li>
                 <li><a class="active" href="message">Leave a Message</a></li>
-                <li><a class="active" href="live_canvas">Pixel Canvas</a></li>
+                <li><a class="active" href="canvas">Pixel Canvas</a></li>
                 <li>
                 {% if session.get('username') %}
                     <a class="active" href="{{ url_for('logout') }}" onclick="return confirmLogout()">Logout ({{ session['username'] }})</a>
@@ -29,7 +29,7 @@
         </nav>
     </header>
 
-    <h2>Welcome to the canvas homepage!</h2>
+    <a class="active" href="live_canvas">Switch to multiplayer drawing!</a>
     <div id="canvasContainer">
         <div id="guide"></div>
         <canvas width="750" height="750" id="canvas"></canvas>
@@ -63,8 +63,8 @@
 
     <div>
         <button id="clearCanvasBtn">Clear Canvas</button>
-        <button id="saveCanvasBtn">Save Canvas</button>
-        <button id="loadCanvasBtn">Load Canvas</button>
+        <button id="saveCanvasBtn">Save & Upload Canvas</button>
+        <button id="loadCanvasBtn">Load Canvas (Coming soon)</button>
     </div>
 
     <h3>Recently uploaded:</h3>
@@ -75,7 +75,7 @@
         <div class="modal-content">
             <h2>Save Your Canvas</h2>
             <p>Name and privacy:</p>
-            <input type="text" id="canvasNameInput" placeholder="Canvas name (3–16 characters)">
+            <input type="text" id="canvasNameInput" placeholder="Canvas name (3–30 characters)">
     
             <div class="checkbox-wrapper">
                 <input type="checkbox" id="privateCheckbox">
