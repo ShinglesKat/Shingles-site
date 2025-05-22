@@ -29,6 +29,7 @@
         </nav>
     </header>
     
+    <div id="tooltip"></div>
     <div id="canvasContainer">
         <div id="guide"></div>
         <canvas width="750" height="750" id="canvas"></canvas>
@@ -67,7 +68,6 @@
         {% if session.get('accounttype') == 'admin' %}
             <button id="clearCanvasBtn">Clear Canvas</button>
         {% endif %}
-
         
     </footer>
 

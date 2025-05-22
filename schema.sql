@@ -2,14 +2,15 @@ CREATE TABLE messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     username TEXT CHECK (LENGTH(username) > 1 AND LENGTH(username) < 17),
-    content TEXT NOT NULL CHECK (LENGTH(content) < 200)
+    content TEXT NOT NULL CHECK (LENGTH(content) < 200),
+    ip_address TEXT
 );
 
 CREATE TABLE pixels (
     x INTEGER NOT NULL,
     y INTEGER NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
+    ip_address TEXT,
     colour TEXT,
     PRIMARY KEY (x, y)
 );
@@ -35,3 +36,11 @@ CREATE TABLE userdrawings (
     FOREIGN KEY (user_id) REFERENCES userinfo(id),
     FOREIGN KEY (username) REFERENCES userinfo(username)
 );
+
+CREATE TABLE bannedIPs (
+    ip TEXT PRIMARY KEY,
+    reason TEXT,
+    banned_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ban_duration TEXT NOT NULL,
+    ban_expires_at TIMESTAMP NOT NULL
+)

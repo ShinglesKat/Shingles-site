@@ -1,10 +1,13 @@
+from datetime import datetime, timedelta
 import sqlite3
+from datetime import timezone
 from threading import Lock, Thread
 import time
 import json
 from flask import Flask, session, redirect, request, jsonify, render_template, url_for
 from markupsafe import escape
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -20,7 +23,7 @@ if not os.path.exists("database/pixels.db"):
     print("Pre-existing pixel database not found...")
     from init_db import init_pixel_db
     init_pixel_db()
-    
+
 if not os.path.exists("database/userinfo.db"):
     print("Pre-existing userinfo database not found...")
     from init_db import init_userinfo_db
@@ -31,7 +34,13 @@ if not os.path.exists("database/userdrawings.db"):
     from init_db import init_userdrawings_db
     init_userdrawings_db()
 
+if not os.path.exists("database/bannedips.db"):
+    print("Pre-existing bannedips database not found...")
+    from init_db import init_bannedips_db
+    init_bannedips_db()
+
 app = Flask(__name__)
+app.secret_key = os.getenv('SECRET_KEY')
 app.secret_key = os.getenv('SECRET_KEY')
     
 @app.route('/')
@@ -122,8 +131,96 @@ def get_db_connections(db_name='database.db') -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     return conn
 
+@app.route('/ban_ip', methods=['POST'])
+def ban_ip():
+    if session.get('accounttype') != 'admin':
+        return jsonify({"error": "Access denied"}), 403
+
+    data = request.get_json()
+    ip = data.get('ip')
+    reason = data.get('reason')
+    ban_duration = data.get('ban_duration')
+
+    if not ip or not reason or not ban_duration:
+        return jsonify({"error": "Missing IP or reason or ban duration"}), 400
+
+    try:
+        duration_delta = parse_duration(ban_duration)
+        expires_at = datetime.now(timezone.utc) + duration_delta
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+
+    conn = get_db_connections('bannedips.db')
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT ip FROM bannedIPs WHERE ip = ?", (ip,))
+        if existing_ban := cursor.fetchone():
+            cursor.execute(
+                "UPDATE bannedIPs SET reason = ?, ban_duration = ?, ban_expires_at = ? WHERE ip = ?",
+                (reason, ban_duration, expires_at.isoformat(), ip)
+            )
+            conn.commit()
+            return jsonify({"status": f"IP {ip} ban updated successfully. New expiry: {expires_at.isoformat()}"}), 200
+        else:
+            cursor.execute(
+                "INSERT INTO bannedIPs (ip, reason, ban_duration, ban_expires_at) VALUES (?, ?, ?, ?)",
+                (ip, reason, ban_duration, expires_at.isoformat())
+            )
+            conn.commit()
+            return jsonify({"status": f"IP {ip} banned successfully. Expires: {expires_at.isoformat()}"}), 200
+    except sqlite3.Error as e:
+        conn.rollback()
+        return jsonify({"error": f"Database operation failed: {str(e)}"}), 500
+    finally:
+        conn.close()
+
+def parse_duration(duration):
+    time_units = {
+        'w': 7 * 24 * 60 * 60,
+        'd': 24 * 60 * 60,
+        'h': 60 * 60,
+        'm': 60,
+        's': 1,
+    }
+    pattern = r'(\d+)\s*(w|d|h|m|s)'
+    matches = re.findall(pattern, duration.lower())
+    
+    if not matches:
+        raise ValueError("Invalid duration format")
+    
+    total_seconds = sum(int(value) * time_units[unit] for value, unit in matches)
+    return timedelta(seconds=total_seconds)
+
+@app.route('/api/check_ban_status', methods=['GET'])
+def check_ban_status():
+    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+    conn = get_db_connections('bannedips.db')
+    cursor = conn.cursor()
+
+    now_utc = datetime.now(timezone.utc)
+    now_iso = now_utc.isoformat()
+
+    cursor.execute("SELECT ban_expires_at, reason FROM bannedIPs WHERE ip = ? AND ban_expires_at > ?", (user_ip, now_iso))
+    if active_ban_info := cursor.fetchone():
+        conn.close()
+        return jsonify({"banned": True, "expires_at": active_ban_info['ban_expires_at'], "reason": active_ban_info['reason']}), 200
+    else:
+        cursor.execute("SELECT ip FROM bannedIPs WHERE ip = ? AND ban_expires_at <= ?", (user_ip, now_iso))
+        if expired_ban_to_delete := cursor.fetchone():
+            try:
+                cursor.execute("DELETE FROM bannedIPs WHERE ip = ?", (user_ip,))
+                conn.commit()
+                print(f"Cleaned up expired ban for IP: {user_ip}")
+            except sqlite3.Error as e:
+                conn.rollback()
+                print(f"Error deleting expired ban for IP {user_ip}: {e}")
+
+        conn.close()
+        return jsonify({"banned": False}), 200
+
 @app.route('/api/get_user_drawings/<int:user_id>')
-def get_user_drawing(user_id):
+def get_user_drawings(user_id):
     conn = get_db_connections('userdrawings.db')
     cursor = conn.cursor()
     drawings = cursor.execute('SELECT * FROM userdrawings WHERE user_id = ?', (user_id,)).fetchall()
@@ -146,7 +243,8 @@ def get_session_data():
     if 'userid' in session and 'username' in session:
         return jsonify({
             'userid': session['userid'],
-            'username': session['username']
+            'username': session['username'],
+            'accounttype': session.get('accounttype')
         })
     else:
         return jsonify({'error': 'User not logged in'}), 401
@@ -158,28 +256,25 @@ def handle_messages() -> jsonify:
 
     username = request.form.get('username', '').strip()
     content = request.form.get('content', '').strip()
+    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)  # Get IP address
 
-    #Ensure valid username and content.
     if not (1 < len(username) < 17):
         return jsonify({"error": "Username must be between 2 and 16 characters."}), 400
     if not (0 < len(content) < 200):
         return jsonify({"error": "Message must be under 200 characters."}), 400
     try:
-
-    #JOKE HERE --
         if session.get('brute'):
             username = 'brute'
             content = 'i am so gay!'
-    # -----------
-        cursor.execute("INSERT INTO messages (username, content) VALUES (?, ?)", (username, content))
+        # Updated to include IP address
+        cursor.execute("INSERT INTO messages (username, content, ip_address) VALUES (?, ?, ?)", (username, content, user_ip))
         conn.commit()
         return jsonify({"status": "Message added successfully!"})
     except sqlite3.IntegrityError:
         return jsonify({"error": "Database error? How did you even trigger this... Maybe stop trying to break it ;-;"}), 400
     finally:
         conn.close()
-    
-        
+
 @app.route('/api/get_messages', methods=['GET'])
 def get_messages():
     conn = get_db_connections()
@@ -193,11 +288,11 @@ def get_messages():
         msg_dict = dict(msg)
         if session.get('accounttype') == 'admin':
             msg_dict['can_delete'] = True
+            msg_dict['can_ban'] = True
         messages_list.append(msg_dict)
 
     return jsonify(messages_list)
 
-#For use in deleting comments        
 @app.route('/delete/<int:message_id>', methods=['POST'])
 def delete_message(message_id):
     if session.get('accounttype') != 'admin':
@@ -210,8 +305,6 @@ def delete_message(message_id):
     conn.close()
     return redirect(url_for('render_message_page'))
 
-
-#Login Stuff
 
 @app.route('/register_account', methods=['POST'])
 def register_account():
@@ -228,7 +321,6 @@ def register_account():
     if cursor.fetchone():
         return jsonify({"error": "Failed to register account! Name already taken..."}), 403
 
-    # Insert user with hashed password
     cursor.execute("INSERT INTO userinfo (username, password) VALUES (?, ?)", (username, password))
     conn.commit()
     conn.close()
@@ -240,7 +332,6 @@ def attempt_login():
     password = request.form.get('password', '').strip()
     username = request.form.get('username', '').strip()
 
-    #Check if attempting to login as admin user, useful for when server restarts and 0 accounts.
     if username == os.getenv('ADMIN_USERNAME') and password == os.getenv('ADMIN_PASSWORD'):
         session['admin'] = True
         session['username'] = username
@@ -269,11 +360,9 @@ def logout():
     session.pop('admin', None)
     session.pop('accounttype', None)
 
-    # Redirect to home or another page after logout
     return redirect(url_for('home'))
 
 
-#LIVE CANVAS
 CELL_SIDE_COUNT = 50
 DEFAULT_COLOUR = "#ffffff"
 saveInterval = 300
@@ -281,21 +370,21 @@ pendingUpdates = []
 pixelArray=[]
 
 def load_pixel_array():
-    arr = [[DEFAULT_COLOUR for _ in range(CELL_SIDE_COUNT)] for _ in range(CELL_SIDE_COUNT)]
+    arr = [[{'colour': DEFAULT_COLOUR, 'ip_address': None} for _ in range(CELL_SIDE_COUNT)] for _ in range(CELL_SIDE_COUNT)]
     conn = get_db_connections('pixels.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT x, y, colour FROM pixels")
-    for x, y, colour in cursor.fetchall():
+    cursor.execute("SELECT x, y, colour, ip_address FROM pixels")
+    for x, y, colour, ip_address in cursor.fetchall():
         if 0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT:
-            arr[y][x] = colour
+            arr[y][x] = {'colour': colour, 'ip_address': ip_address}
     conn.close()
     return arr
 pixelArray = load_pixel_array()
 
-#save to database every 120 seconds, flush all lines waiting to be updated, my apologies if you're drawing at that time :)
+
 def flush_pending_updates():
     while True:
-        time.sleep(120)
+        time.sleep(30)
         update_pixel_db(pendingUpdates)
         pendingUpdates.clear()
         print("Updated Database... (pixels.db)")
@@ -304,18 +393,15 @@ Thread(target=flush_pending_updates, daemon=True).start()
 def update_pixel_db(pixelArray):
     conn = get_db_connections('pixels.db')
     cursor = conn.cursor()
-    
+
     for pixel in pixelArray:
-        x, y, colour = pixel
+        x, y, colour, ip = pixel
 
-        #Update the color for the specific pixel (x, y)
         cursor.execute("SELECT 1 FROM pixels WHERE x = ? AND y = ?", (x, y))
-        exists = cursor.fetchone()
-
-        if exists:
-            cursor.execute("UPDATE pixels SET colour = ? WHERE x = ? AND y = ?", (colour, x, y))
+        if exists := cursor.fetchone():
+            cursor.execute("UPDATE pixels SET colour = ?, ip_address = ? WHERE x = ? AND y = ?", (colour, ip, x, y))
         else:
-            cursor.execute("INSERT INTO pixels (x, y, colour) VALUES (?, ?, ?)", (x, y, colour))
+            cursor.execute("INSERT INTO pixels (x, y, colour, ip_address) VALUES (?, ?, ?, ?)", (x, y, colour, ip))
 
     conn.commit()
     conn.close()
@@ -326,35 +412,32 @@ def update_pixel():
     x = data.get("x")
     y = data.get("y")
     colour = data.get("colour")
-    
+    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+
     if x is None or y is None or colour is None:
         return jsonify({"error": "Missing pixel data"}), 400
-    
+
     if 0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT:
-        pixelArray[y][x] = colour
-        pendingUpdates.append((x, y, colour))
+        pixelArray[y][x] = {'colour': colour, 'ip_address': user_ip}
+        pendingUpdates.append((x, y, colour, user_ip))
         return jsonify({"status": "Pixel updated in memory"}), 200
     else:
         return jsonify({"error": "Invalid coordinates"}), 400
 
-#this canvas clear was a pain in my ass and harder than I thought it'd be -.-
 @app.route('/canvas/clear', methods=['POST'])
 def clear_canvas():
     conn = get_db_connections('pixels.db')
     cursor = conn.cursor()
 
-    #Reset all pixels to white in the database
     cursor.execute("UPDATE pixels SET colour = ? WHERE x BETWEEN 0 AND ? AND y BETWEEN 0 AND ?", (DEFAULT_COLOUR, CELL_SIDE_COUNT - 1, CELL_SIDE_COUNT - 1))
     conn.commit()
 
-    #Ensure all pixels cleared correctly.
     cursor.execute("SELECT * FROM pixels WHERE colour != ?", (DEFAULT_COLOUR,))
     if remaining_pixels := cursor.fetchall():
         print("Pixels that weren't cleared:", remaining_pixels)
 
-    #
     global pixelArray
-    pixelArray = [[DEFAULT_COLOUR for _ in range(CELL_SIDE_COUNT)] for _ in range(CELL_SIDE_COUNT)]
+    pixelArray = [[{'colour': DEFAULT_COLOUR, 'ip_address': None} for _ in range(CELL_SIDE_COUNT)] for _ in range(CELL_SIDE_COUNT)]
 
     conn.close()
 
@@ -362,15 +445,25 @@ def clear_canvas():
 
 @app.route('/api/canvas', methods=['GET'])
 def get_pixel_array():
-    return jsonify(pixelArray)
+    response_array = []
+    for row in pixelArray:
+        new_row = []
+        for cell_data in row:
+            if isinstance(cell_data, dict) and 'colour' in cell_data and 'ip_address' in cell_data:
+                new_row.append(cell_data)
+            elif isinstance(cell_data, str):
+                new_row.append({'colour': cell_data, 'ip_address': None})
+            else:
+                new_row.append({'colour': DEFAULT_COLOUR, 'ip_address': None})
+        response_array.append(new_row)
 
+    return jsonify(response_array)
 
-#REGULAR CANVAS
 
 @app.route('/upload', methods=['POST'])
 def upload_pixel_canvas():
     data = request.get_json()
-    print("Received data:", data)  # Debugging
+    print("Received data:", data)
     user_id = data.get('user_id')
     username = data.get('username')
     content = data.get('content')
@@ -385,7 +478,6 @@ def upload_pixel_canvas():
     cursor = conn.cursor()
     new_piece = False
     try:
-        #Check if drawing with same name exists
         cursor.execute("SELECT id FROM userdrawings WHERE user_id = ? AND piece_name = ?", (user_id, piece_name))
         existing_piece = cursor.fetchone()
 
@@ -407,14 +499,11 @@ def upload_pixel_canvas():
         conn.commit()
         conn.close()
 
-        #if new drawing, add it into user's created
         if new_piece:
             conn = get_db_connections('userinfo.db')
             cursor = conn.cursor()
             cursor.execute("SELECT creationsIDs FROM userinfo WHERE id = ?", (user_id,))
-            result = cursor.fetchone()
-
-            if result:
+            if result := cursor.fetchone():
                 creations_list = json.loads(result['creationsIDs']) if result['creationsIDs'] else []
                 creations_list.append(drawing_id)
                 updated_creations_json = json.dumps(creations_list)
@@ -444,19 +533,13 @@ def retrieve_latest():
         ORDER BY creationTime DESC
         LIMIT 5
     """)
-    
+
     drawings = cursor.fetchall()
     conn.close()
 
-    #Return the drawings as a list of dictionaries
-    drawings_list = []
-    for drawing in drawings:
-        drawing_dict = dict(drawing)
-        drawings_list.append(drawing_dict)
-
+    drawings_list = [dict(drawing) for drawing in drawings]
     return jsonify(drawings_list)
 
-#Admin related
 @app.route('/delete_drawing/<int:drawing_id>', methods=['POST'])
 def delete_drawing(drawing_id):
     if not session.get('accounttype'):
@@ -478,15 +561,13 @@ def delete_drawing(drawing_id):
     cursor.execute("DELETE FROM userdrawings WHERE id = ?", (drawing_id,))
     conn.commit()
     conn.close()
-    
+
     conn = get_db_connections('userinfo.db')
     cursor = conn.cursor()
     owner_id = drawing['user_id']
-    
+
     cursor.execute("SELECT creationsIDs FROM userinfo WHERE id = ?", (owner_id,))
-    user_info = cursor.fetchone()
-    
-    if user_info:
+    if user_info := cursor.fetchone():
         creationsIDs = json.loads(user_info['creationsIDs'])
         if drawing_id in creationsIDs:
             creationsIDs.remove(drawing_id)
@@ -494,7 +575,7 @@ def delete_drawing(drawing_id):
             cursor.execute("UPDATE userinfo SET creationsIDs = ? WHERE id = ?",(updated_creationsIDs, owner_id))
             conn.commit()
     conn.close()
-            
+
 
     return redirect(url_for('home'))
 
@@ -538,16 +619,15 @@ def update_user():
         cursor.execute(
             "UPDATE userinfo SET username = ?, password = ?, userType = ?, creationsIDs = ? WHERE id = ?",
             (new_username, new_password, new_type, new_drawings, user_id))
-
         conn.commit()
         return jsonify({"status": "User updated successfully"})
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+    
 
 
-#Down here be jokes!
 @app.route('/set_brute', methods=['POST'])
 def set_brute():
     session['brute'] = True
@@ -562,9 +642,5 @@ def exit_brute():
     return redirect(url_for('home'))
 
 
-#Comment out if not local testing :)
 if __name__ == '__main__':
     app.run(debug=True)
-    
-    
-    

@@ -32,20 +32,14 @@ def init_database(db_name, initialization_func=None):
         print(f"{db_name} already exists, skipping initialization.")
 
 def init_db():
-    def setup_messages(cursor):
-        cursor.execute(
-            "INSERT INTO messages (username, content) VALUES (?, ?)",
-            ('Shingle', 'Test content for first post :^)')
-        )
-
-    init_database('database.db', setup_messages)
+    init_database('database.db')
 
 def init_pixel_db():
     def setup_pixels(cursor):
         for y, x in itertools.product(range(10), range(10)):
             cursor.execute(
-                "INSERT INTO pixels (x, y, colour) VALUES (?, ?, ?)",
-                (x, y, 'FFFFFF')
+                "INSERT INTO pixels (x, y, colour, ip) VALUES (?, ?, ?, ?)",
+                (x, y, 'FFFFFF', None)
             )
 
     init_database('pixels.db', setup_pixels)
@@ -55,3 +49,7 @@ def init_userinfo_db():
 
 def init_userdrawings_db():
     init_database('userdrawings.db')
+
+def init_bannedips_db():
+    init_database('bannedips.db')
+    

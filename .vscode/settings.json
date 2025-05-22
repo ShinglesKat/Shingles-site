@@ -1,11 +1,14 @@
 {
     "cSpell.words": [
         "AUTOINCREMENT",
+        "bannedips",
         "colour",
         "dotenv",
         "jsonify",
         "onclick",
         "stylesheet",
-        "topnav"
+        "topnav",
+        "userdrawings",
+        "userinfo"
     ]
 }

@@ -203,6 +203,40 @@ body{
     margin-top: 20px;
 }
 
+#tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 1000;
+    max-width: 200px;
+    font-family: sans-serif;
+}
+
+#pixelTooltip.visible {
+    display: block;
+    opacity: 1;
+}
+
+#tooltip button {
+    margin-top: 6px;
+    padding: 4px 8px;
+    background-color: #e3a157;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#tooltip button:hover {
+    background-color: #d28e3c;
+}
+
+
 
 /* MINI CANVAS */
 .drawing-container {
