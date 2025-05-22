@@ -137,12 +137,12 @@ def ban_ip():
         return jsonify({"error": "Access denied"}), 403
 
     data = request.get_json()
-    ip = data.get('ip')
+    ip_string = data.get('ip')
     reason = data.get('reason')
     ban_duration = data.get('ban_duration')
 
-    if not ip or not reason or not ban_duration:
-        return jsonify({"error": "Missing IP or reason or ban duration"}), 400
+    if not ip_string or not reason or not ban_duration:
+        return jsonify({"error": "Missing IP, reason, or ban duration"}), 400
 
     try:
         duration_delta = parse_duration(ban_duration)
@@ -150,24 +150,28 @@ def ban_ip():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
+    # Split comma-separated IPs and sanitize
+    ips = [ip.strip() for ip in ip_string.split(',') if ip.strip()]
+
     conn = get_db_connections('bannedips.db')
     cursor = conn.cursor()
+
     try:
-        cursor.execute("SELECT ip FROM bannedIPs WHERE ip = ?", (ip,))
-        if existing_ban := cursor.fetchone():
-            cursor.execute(
-                "UPDATE bannedIPs SET reason = ?, ban_duration = ?, ban_expires_at = ? WHERE ip = ?",
-                (reason, ban_duration, expires_at.isoformat(), ip)
-            )
-            conn.commit()
-            return jsonify({"status": f"IP {ip} ban updated successfully. New expiry: {expires_at.isoformat()}"}), 200
-        else:
-            cursor.execute(
-                "INSERT INTO bannedIPs (ip, reason, ban_duration, ban_expires_at) VALUES (?, ?, ?, ?)",
-                (ip, reason, ban_duration, expires_at.isoformat())
-            )
-            conn.commit()
-            return jsonify({"status": f"IP {ip} banned successfully. Expires: {expires_at.isoformat()}"}), 200
+        for ip in ips:
+            cursor.execute("SELECT ip FROM bannedIPs WHERE ip = ?", (ip,))
+            if existing_ban := cursor.fetchone():
+                cursor.execute(
+                    "UPDATE bannedIPs SET reason = ?, ban_duration = ?, ban_expires_at = ? WHERE ip = ?",
+                    (reason, ban_duration, expires_at.isoformat(), ip)
+                )
+            else:
+                cursor.execute(
+                    "INSERT INTO bannedIPs (ip, reason, ban_duration, ban_expires_at) VALUES (?, ?, ?, ?)",
+                    (ip, reason, ban_duration, expires_at.isoformat())
+                )
+        conn.commit()
+        return jsonify({"status": f"Banned {len(ips)} IP(s). Expires: {expires_at.isoformat()}"}), 200
+
     except sqlite3.Error as e:
         conn.rollback()
         return jsonify({"error": f"Database operation failed: {str(e)}"}), 500
@@ -193,7 +197,7 @@ def parse_duration(duration):
 
 @app.route('/api/check_ban_status', methods=['GET'])
 def check_ban_status():
-    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
 
     conn = get_db_connections('bannedips.db')
     cursor = conn.cursor()
@@ -201,23 +205,37 @@ def check_ban_status():
     now_utc = datetime.now(timezone.utc)
     now_iso = now_utc.isoformat()
 
-    cursor.execute("SELECT ban_expires_at, reason FROM bannedIPs WHERE ip = ? AND ban_expires_at > ?", (user_ip, now_iso))
-    if active_ban_info := cursor.fetchone():
-        conn.close()
-        return jsonify({"banned": True, "expires_at": active_ban_info['ban_expires_at'], "reason": active_ban_info['reason']}), 200
-    else:
-        cursor.execute("SELECT ip FROM bannedIPs WHERE ip = ? AND ban_expires_at <= ?", (user_ip, now_iso))
-        if expired_ban_to_delete := cursor.fetchone():
-            try:
-                cursor.execute("DELETE FROM bannedIPs WHERE ip = ?", (user_ip,))
-                conn.commit()
-                print(f"Cleaned up expired ban for IP: {user_ip}")
-            except sqlite3.Error as e:
-                conn.rollback()
-                print(f"Error deleting expired ban for IP {user_ip}: {e}")
+    try:
+        cursor.execute(
+            "SELECT ban_expires_at, reason FROM bannedIPs WHERE ip = ? AND ban_expires_at > ?",
+            (user_ip, now_iso)
+        )
+        result = cursor.fetchone()
 
+        if result:
+            return jsonify({
+                "banned": True,
+                "expires_at": result['ban_expires_at'],
+                "reason": result['reason']
+            }), 200
+        else:
+            # Check for expired ban to clean up
+            cursor.execute(
+                "SELECT ip FROM bannedIPs WHERE ip = ? AND ban_expires_at <= ?",
+                (user_ip, now_iso)
+            )
+            if cursor.fetchone():
+                try:
+                    cursor.execute("DELETE FROM bannedIPs WHERE ip = ?", (user_ip,))
+                    conn.commit()
+                    print(f"Cleaned up expired ban for IP: {user_ip}")
+                except sqlite3.Error as e:
+                    conn.rollback()
+                    print(f"Error deleting expired ban for IP {user_ip}: {e}")
+
+            return jsonify({"banned": False}), 200
+    finally:
         conn.close()
-        return jsonify({"banned": False}), 200
 
 @app.route('/api/get_user_drawings/<int:user_id>')
 def get_user_drawings(user_id):
