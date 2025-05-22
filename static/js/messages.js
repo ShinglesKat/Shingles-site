@@ -44,7 +44,16 @@ async function add_message(event){
         showAlert(`Error adding message: ${error.message}`);
     }
 }
-
+setInterval(() => {
+    fetch('/api/check_ban_status')
+    .then(res => res.json())
+    .then(data => {
+        if (data.banned) {
+        alert('You have been banned! The page will refresh.');
+        window.location.reload();
+        }
+    });
+}, 5000);
 async function retrieve_messages(){
     try {
         const response = await fetch("/api/get_messages");

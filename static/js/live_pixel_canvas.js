@@ -62,6 +62,17 @@ document.addEventListener("DOMContentLoaded", () => {
     checkIfBanned();
 });
 
+setInterval(() => {
+    fetch('/api/check_ban_status')
+    .then(res => res.json())
+    .then(data => {
+        if (data.banned) {
+        alert('You have been banned! The page will refresh.');
+        window.location.reload();
+        }
+    });
+}, 5000);
+
 function checkIfBanned(){
     fetch("/api/check_ban_status")
         .then(res => {
