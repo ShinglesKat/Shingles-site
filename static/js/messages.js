@@ -1,4 +1,4 @@
-async function add_message(event){
+async function add_message(event) {
     event.preventDefault();
 
     const username = document.getElementById('nameInput').value;
@@ -10,7 +10,9 @@ async function add_message(event){
 
         if (banData.banned) {
             let banMessage = "You are banned from posting messages.";
-            if (banData.reason) banMessage += `\nReason: ${banData.reason}`;
+            if (banData.reason) {
+                banMessage += `\nReason: ${banData.reason}`;
+            }
             if (banData.expires_at) {
                 const expiry = new Date(banData.expires_at).toLocaleString();
                 banMessage += `\nBan expires: ${expiry}`;
@@ -28,22 +30,24 @@ async function add_message(event){
         });
 
         if (!response.ok) {
-            throw new Error(`Response status: ${response.status}`);
+            throw new Error(`Status: ${response.status}`);
         }
 
-        const result = await response.json();
-        console.log(result);
+        await response.json();
+
         document.getElementById('commentForm').reset();
-        document.getElementById("successMessage").style.display = "block";
+
+        const msg = document.getElementById("successMessage");
+        msg.classList.add("show");
         setTimeout(() => {
-            document.getElementById("successMessage").style.display = "none";
+            msg.classList.remove("show");
         }, 3000);
-        retrieve_messages();
+        
     } catch (error) {
         console.error("Error adding message:", error.message);
-        showAlert(`Error adding message: ${error.message}`);
     }
 }
+
 setInterval(() => {
     fetch('/api/check_ban_status')
     .then(res => res.json())
@@ -109,66 +113,92 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchMessages, 1000);
 });
 
-function fetchMessages() {
+function showLoadingMessage() {
+    const messageList = document.getElementById('messageList');
+    messageList.innerHTML = '<li>Loading messages...</li>';
+}
+
+function diffMessages(newMessages) {
+    const messageList = document.getElementById('messageList');
     if (!messageList) {
-        console.log("Not on message");
         return;
     }
+
+    const existing = new Map();
+    messageList.querySelectorAll('li[data-id]').forEach(li => {
+        existing.set(li.getAttribute('data-id'), li);
+    });
+
+    const seen = new Set();
+
+    newMessages.forEach(msg => {
+        const id = `message-${msg.id}`;
+        seen.add(id);
+
+        let li = existing.get(id);
+        if (!li) {
+            // Add new message
+            li = document.createElement('li');
+            li.setAttribute('data-id', id);
+            li.innerHTML = buildMessageHTML(msg);
+            messageList.prepend(li);
+        } else {
+            // Check if content changed
+            const temp = document.createElement('div');
+            temp.innerHTML = buildMessageHTML(msg);
+            if (li.innerHTML !== temp.innerHTML) {
+                li.innerHTML = buildMessageHTML(msg);
+            }
+        }
+    });
+
+    // Remove messages no longer present
+    existing.forEach((li, id) => {
+        if (!seen.has(id)) {
+            li.remove();
+        }
+    });
+}
+
+function buildMessageHTML(msg) {
+    let html = `
+        ${msg.username}: ${msg.content} <br> ${msg.created}
+    `;
+
+    let buttonHTML = '';
+
+    if (msg.can_delete) {
+        buttonHTML += `
+            <form method="POST" action="/delete/${msg.id}" style="display:inline; margin-right:10px;">
+                <button type="submit" style="background-color:#dc3545; color:white; border:none; padding:5px 10px; cursor:pointer;">
+                    Delete Message
+                </button>
+            </form>
+        `;
+    }
+
+    if (msg.can_ban && msg.ip_address) {
+        buttonHTML += `
+            <button onclick="banUserFromMessage('${msg.ip_address}')" style="background-color:#fd7e14; color:white; border:none; padding:5px 10px; cursor:pointer;">
+                Ban User
+            </button>
+        `;
+    }
+
+    if (buttonHTML) {
+        html += `<div style="margin-top: 5px;">${buttonHTML}</div>`;
+    }
+
+    return html;
+}
+
+function fetchMessages() {
     fetch('/api/get_messages')
         .then(response => response.json())
         .then(data => {
-            const messageList = document.getElementById('messageList');
-            messageList.innerHTML = '';
-            data.forEach(msg => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    ${msg.username}: ${msg.content} <br> ${msg.created}
-                `;
-                
-                const buttonContainer = document.createElement('div');
-                buttonContainer.style.marginTop = '5px';
-                
-                if (msg.can_delete) {
-                    const deleteForm = document.createElement('form');
-                    deleteForm.method = 'POST';
-                    deleteForm.action = `/delete/${msg.id}`;
-                    deleteForm.style.display = 'inline';
-                    deleteForm.style.marginRight = '10px';
-                    
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.type = 'submit';
-                    deleteBtn.textContent = 'Delete Message';
-                    deleteBtn.style.backgroundColor = '#dc3545';
-                    deleteBtn.style.color = 'white';
-                    deleteBtn.style.border = 'none';
-                    deleteBtn.style.padding = '5px 10px';
-                    deleteBtn.style.cursor = 'pointer';
-                    
-                    deleteForm.appendChild(deleteBtn);
-                    buttonContainer.appendChild(deleteForm);
-                }
-                
-                if (msg.can_ban && msg.ip_address) {
-                    const banBtn = document.createElement('button');
-                    banBtn.textContent = 'Ban User';
-                    banBtn.style.backgroundColor = '#fd7e14';
-                    banBtn.style.color = 'white';
-                    banBtn.style.border = 'none';
-                    banBtn.style.padding = '5px 10px';
-                    banBtn.style.cursor = 'pointer';
-                    banBtn.onclick = () => banUserFromMessage(msg.ip_address);
-                    
-                    buttonContainer.appendChild(banBtn);
-                }
-                
-                if (buttonContainer.children.length > 0) {
-                    li.appendChild(buttonContainer);
-                }
-                
-                messageList.appendChild(li);
-            });
+            diffMessages(data);
         })
-        .catch(err => console.error('Error fetching messages:', err));
+        .catch(err => {
+            console.error('Error fetching messages:', err);
+        });
 }
-
-window.onload = retrieve_messages;

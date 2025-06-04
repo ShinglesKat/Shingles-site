@@ -2,7 +2,6 @@
 Shoutout chatgpt for helping me with css cause I am badddd at it lol
 . is class
 # is id
-
 */
 header {
     width: 100%;
@@ -11,31 +10,28 @@ header {
     align-items: center;
     padding: 1rem 0;
     background-color: #e3a157;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Separator line */
 .header-separator {
-    width: 100px;                   /* Length of the line */
+    width: 100px;
     border: 0;
-    border-top: 3px solid #fff;     /* Thickness and color */
-    margin: 0.5rem auto;            /* Vertical spacing and centering */
+    border-top: 3px solid #fff;
+    margin: 0.5rem auto;
 }
 
-/* Header Title */
 header h1 {
     margin: 0;
     color: #fff;
     font-family: 'Baloo 2', cursive;
-    font-size: 2.5rem;               /* Slightly larger font size */
+    font-size: 2.5rem;
     text-align: center;
-    letter-spacing: 1px;             /* Small letter spacing for a cleaner look */
+    letter-spacing: 1px;
 }
 
-/* Navigation Styling */
 nav.topnav ul {
     display: flex;
-    justify-content: space-around;  /* Distribute items evenly */
+    justify-content: space-around;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -44,51 +40,47 @@ nav.topnav ul {
 
 nav.topnav li {
     display: inline-block;
-    position: relative;             /* For positioning effects */
+    position: relative;
 }
 
 nav.topnav a {
     display: block;
     color: white;
     text-align: center;
-    padding: 10px 30px;             /* Slightly larger padding for better clickability */
+    padding: 10px 30px;
     text-decoration: none;
     font-size: 1.1rem;
-    transition: all 0.3s ease-in-out; /* Smooth hover transition */
+    transition: all 0.3s ease-in-out;
 }
 
-/* Hover effect on links */
 nav.topnav a:hover {
-    transform: translateY(-3px);     /* Slight movement on hover for effect */
+    transform: translateY(-3px);
 }
 
-/* Active state for the current page link */
 nav.topnav a.active {
-    border-radius: 2px;              /* Rounded corners for active link */
-    font-weight: bold;               /* Make active link text bold */
+    border-radius: 2px;
+    font-weight: bold;
 }
 
-/* Responsive Design: Mobile View */
 @media screen and (max-width: 768px) {
     nav.topnav ul {
-        flex-direction: column;        /* Stack the nav items vertically */
+        flex-direction: column;
         align-items: center;
     }
 
     nav.topnav li {
-        width: 100%;                    /* Make each list item take full width */
-        text-align: center;             /* Center text */
+        width: 100%;
+        text-align: center;
     }
 
     header h1 {
-        font-size: 2rem;               /* Make the title smaller on smaller screens */
+        font-size: 2rem;
     }
 }
 
-
-footer{
-    position:fixed;
-    bottom:0px;
+footer {
+    position: fixed;
+    bottom: 0px;
     width: 100%;
     max-width: fit-content;
 }
@@ -97,9 +89,9 @@ footer a {
     text-decoration: none;
 }
 
-body{
+body {
     background: #A1F9FF;
-    background: radial-gradient(circle,rgba(161, 249, 255, 1) 0%, rgba(212, 255, 255, 1) 100%);
+    background: radial-gradient(circle, rgba(161, 249, 255, 1) 0%, rgba(212, 255, 255, 1) 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -117,162 +109,26 @@ body{
     font-family: 'Baloo 2', cursive;
 }
 
-.topnav{
+.topnav {
     flex-direction: column;
     align-items: center;
     text-align: center;
 }
 
-#mainContainer{
+#mainContainer {
     text-align: center;
-}
-
-/* Minesweeper stuff */
-.minesweeper{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* Pixel Canvas */
-#canvas {
-    cursor:pointer;
-}
-
-#guide {
-    display: grid;
-    pointer-events: none;
-    position: absolute;
-    border: 1px solid rgba(0,0,0,0.1);
-    top: 0;
-    left: 0;
-}
-
-#guide div {
-    border:1px solid rgba(0,0,0,0.1);
-}
-
-.colour-btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    cursor: pointer;
-    border-radius: 4px;
-}
-
-#mainContainer{
     max-width: fit-content;
     margin: 0 auto;
     padding: 2rem;
 }
 
-.zoom-controls {
-    margin-top: 1rem;
-}
-
-#canvasWrapper{
-    width:750px;
-    height: 750px;
-    overflow: auto;
-    border: 2px solid #ccc;
-    margin-top: 1rem;
-}
-#canvasContainer{
-    position: relative;
-    display: inline-block;
-}
-
-.control-panel{
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-top: 1rem;
-}
-.preset-colours{
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-
-#recentDrawings {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr); /* Create 5 equal-width columns */
-    grid-template-rows: repeat(2, 1fr); /* Create 2 rows */
-    gap: 20px;  /* Add space between the grid items */
-    justify-items: center; /* Center the items horizontally within their grid cell */
-    margin-top: 20px;
-}
-
-#tooltip {
-    position: absolute;
-    background: rgba(0, 0, 0, 0.75);
-    color: white;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    z-index: 1000;
-    max-width: 200px;
-    font-family: sans-serif;
-}
-
-#pixelTooltip.visible {
-    display: block;
-    opacity: 1;
-}
-
-#tooltip button {
-    margin-top: 6px;
-    padding: 4px 8px;
-    background-color: #e3a157;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-#tooltip button:hover {
-    background-color: #d28e3c;
-}
-
-
-
-/* MINI CANVAS */
-.drawing-container {
+.minesweeper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    text-align: center;
 }
 
-.drawing-container canvas {
-    border: 1px solid #ccc;
-    background-color: white;
-    display: block;
-    margin: 0 auto;
-}
-
-.drawing-container p {
-    font-weight: bold;
-    margin-top: 10px;
-}
-
-.drawing-name {
-    font-weight: bold;
-    margin: 4px 0 0;
-}
-
-.drawing-user {
-    font-style: italic;
-    font-size: 0.9em;
-    margin: 0 0 8px;
-}
-
-
-/* Modal box */
-
+/* Modal */
 .modal.hidden {
     display: none;
 }
@@ -283,7 +139,7 @@ body{
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -312,33 +168,4 @@ body{
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
-}
-
-.drawing-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 10px;
-    border: 1px solid #ddd;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-/* Hover Effect for Drawing Container */
-.drawing-container:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-/* Name Label */
-.drawing-name {
-    font-weight: bold;
-    margin: 4px 0 0;
-    font-size: 16px;
-    color: #333;
-    text-align: center;
 }

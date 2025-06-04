@@ -41,7 +41,7 @@ fetch("/api/canvas")
             for (let x = 0; x < CELL_SIDE_COUNT; x++) {
                 const pixelData = data[y][x];
                 if (pixelData) {
-                    const colour = pixelData.colour;
+                    const {colour} = pixelData;
                     const ip = pixelData.ip_address;
                     
 
@@ -226,7 +226,7 @@ function refreshCanvasFromServer() {
 
                     //Check if pixelData exists and has a colour property
                     if (pixelData && pixelData.colour !== undefined) {
-                        const colour = pixelData.colour;
+                        const {colour} = pixelData;
                         const ip = pixelData.ip_address; // Get the IP
 
                         //Only update if the colour has changed and it's not the currently hovered cell

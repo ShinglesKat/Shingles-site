@@ -3,6 +3,7 @@
 <head>
     <title>Shingles's amazing website</title>
     <link rel="stylesheet" href="static/css/styles.css">
+    <link rel="stylesheet" href="static/css/canvas.css">
 </head>
 <body>
     <header>
@@ -29,10 +30,11 @@
         </nav>
     </header>
 
-    <a class="active" href="live_canvas">Switch to multiplayer drawing!</a>
-    <div id="canvasContainer">
-        <div id="guide"></div>
-        <canvas width="750" height="750" id="canvas"></canvas>
+    <div id="canvasWrapper">
+        <div id="canvasContainer">
+            <canvas id="canvas" width="750" height="750"></canvas>
+            <div id="guide"></div>
+        </div>
     </div>
 
     <div class="control-panel">
@@ -66,6 +68,8 @@
         <button id="saveCanvasBtn">Save & Upload Canvas</button>
         <button id="loadCanvasBtn">Load Canvas (Coming soon)</button>
     </div>
+
+    <a class="active" href="live_canvas">Switch to multiplayer drawing!</a>
 
     <h3>Recently uploaded:</h3>
     <div id="recentDrawings"></div>

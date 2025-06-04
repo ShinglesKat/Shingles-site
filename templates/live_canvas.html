@@ -3,6 +3,7 @@
 <head>
     <title>Shingles's Amazing Website</title>
     <link rel="stylesheet" href="static/css/styles.css" />
+    <link rel="stylesheet" href="static/css/canvas.css">
 </head>
 <body>
     <header>
@@ -30,9 +31,11 @@
     </header>
     
     <div id="tooltip"></div>
-    <div id="canvasContainer">
-        <div id="guide"></div>
-        <canvas width="750" height="750" id="canvas"></canvas>
+    <div id="canvasWrapper">
+        <div id="canvasContainer">
+            <canvas id="canvas" width="750" height="750"></canvas>
+            <div id="guide"></div>
+        </div>
     </div>
 
     <!-- Controls Below -->

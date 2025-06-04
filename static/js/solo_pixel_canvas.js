@@ -4,6 +4,8 @@
  */
 
 let isDrawing = false;
+let lastHoveredCell = { x: -1, y: -1 }
+
 const canvas = document.getElementById("canvas");
 const guide = document.getElementById("guide");
 const colourInput = document.getElementById("colourInput");
@@ -37,6 +39,8 @@ function fillCell(cellX, cellY) {
     drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
     colourHistory[`${cellX}_${cellY}`] = colour;
 
+    // Remove any existing entry for this cell before adding the new one
+    drawnCells = drawnCells.filter(cell => !(cell.x === cellX && cell.y === cellY));
     drawnCells.push({ x: cellX, y: cellY, colour: colour });
 
     saveCanvasState();  //Save after each draw
@@ -60,6 +64,7 @@ function loadCanvasState() {
 
             drawingContext.fillStyle = colour;
             drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
+            colourHistory[`${x}_${y}`] = colour; // Also update colourHistory
         });
     }
 }
@@ -107,20 +112,76 @@ function handleToggleGuideChange() {
     guide.style.display = toggleGuide.checked ? null : "none";
 }
 
+// New function to redraw the canvas from colourHistory
+function redrawCanvasFromHistory() {
+    drawingContext.fillStyle = "#ffffff"; // Clear the entire canvas
+    drawingContext.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < CELL_SIDE_COUNT; i++) {
+        for (let j = 0; j < CELL_SIDE_COUNT; j++) {
+            const key = `${i}_${j}`;
+            const colour = colourHistory[key];
+            if (colour) {
+                const startX = i * cellPixelLength;
+                const startY = j * cellPixelLength;
+                drawingContext.fillStyle = colour;
+                drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
+            }
+        }
+    }
+}
+
 canvas.addEventListener("mousedown", (e) => {
     isDrawing = true;
     handleCanvasMousedown(e);
 });
+
 canvas.addEventListener("mousemove", (e) => {
+    const canvasBoundingRect = canvas.getBoundingClientRect();
+    const x = e.clientX - canvasBoundingRect.left;
+    const y = e.clientY - canvasBoundingRect.top;
+    const cellX = Math.floor(x / cellPixelLength);
+    const cellY = Math.floor(y / cellPixelLength);
+
+    // If mouse is outside canvas, reset lastHoveredCell and redraw if needed
+    if (cellX < 0 || cellY < 0 || cellX >= CELL_SIDE_COUNT || cellY >= CELL_SIDE_COUNT) {
+        if (lastHoveredCell.x !== -1) { // Only redraw if we were previously hovering over a cell
+            redrawCanvasFromHistory();
+            lastHoveredCell = { x: -1, y: -1 }; // Reset
+        }
+        return;
+    }
+
+    // Only update if the hovered cell has changed
+    if (cellX !== lastHoveredCell.x || cellY !== lastHoveredCell.y) {
+        redrawCanvasFromHistory(); // Redraw the canvas to clear previous hover effect
+
+        // Apply the new hover effect
+        const startX = cellX * cellPixelLength;
+        const startY = cellY * cellPixelLength;
+        drawingContext.fillStyle = colourInput.value;
+        drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
+
+        // Update the last hovered cell
+        lastHoveredCell = { x: cellX, y: cellY };
+    }
+
     if (isDrawing) {
         handleCanvasMousedown(e);
     }
 });
+
 canvas.addEventListener("mouseup", () => {
     isDrawing = false;
 });
+
 canvas.addEventListener("mouseleave", () => {
     isDrawing = false;
+    // When the mouse leaves the canvas, restore the last hovered cell's color
+    if (lastHoveredCell.x !== -1) {
+        redrawCanvasFromHistory(); // Redraw to remove the hover effect
+        lastHoveredCell = { x: -1, y: -1 }; // Reset
+    }
 });
 
 toggleGuide.addEventListener("change", handleToggleGuideChange);
@@ -140,11 +201,12 @@ function attachButtonListener(button, eventType, callback) {
 
 const clearCanvasButton = document.getElementById("clearCanvasBtn");
 const saveCanvasButton = document.getElementById("saveCanvasBtn");
-const loadCanvasButton = document.getElementById("loadCanvasBtn");
+const loadCanvasButton = document.getElementById("loadCanvasBtn"); // This seems to be a general load button, not specific to recent drawings
 
 attachButtonListener(clearCanvasButton, "click", clearCanvas);
 attachButtonListener(saveCanvasButton, "click", saveCanvasData);
-attachButtonListener(loadCanvasButton, "click", loadCanvasData);
+// Assuming loadCanvasButton is for triggering the modal to load drawings
+// attachButtonListener(loadCanvasButton, "click", showLoadDrawingModal); // You'd need a function for this
 
 function clearCanvas() {
     const yes = confirm("Are you sure?");
@@ -243,7 +305,8 @@ async function saveCanvasData() {
     }
 }
 
-async function loadCanvasData(drawing, container) {
+// Renamed and modified loadCanvasData to render a drawing (e.g., in a gallery)
+async function renderDrawingOnMiniCanvas(drawing, container) {
     const canvasContainer = document.createElement('div');
     canvasContainer.classList.add('drawing-container');
 
@@ -261,12 +324,12 @@ async function loadCanvasData(drawing, container) {
     context.fillRect(0, 0, miniCanvas.width, miniCanvas.height);
 
     const cells = JSON.parse(drawing.content);
-    const cellPixelLength = miniCanvasSize / 50;
+    const miniCellPixelLength = miniCanvasSize / CELL_SIDE_COUNT; // Use CELL_SIDE_COUNT for consistency
 
     cells.forEach(cell => {
         const { x, y, colour } = cell;
         context.fillStyle = colour;
-        context.fillRect(x * cellPixelLength, y * cellPixelLength, cellPixelLength, cellPixelLength);
+        context.fillRect(x * miniCellPixelLength, y * miniCellPixelLength, miniCellPixelLength, miniCellPixelLength);
     });
 
     drawingLink.appendChild(miniCanvas);
@@ -288,6 +351,7 @@ async function loadCanvasData(drawing, container) {
     container.appendChild(canvasContainer);
 }
 
+
 async function loadRecentDrawings() {
     try {
         const response = await fetch('/retrieve_latest');
@@ -307,11 +371,13 @@ async function loadRecentDrawings() {
         }
 
         for (const drawing of drawings) {
-            await loadCanvasData(drawing, drawingsContainer);
+            await renderDrawingOnMiniCanvas(drawing, drawingsContainer); // Use the renamed function
         }
     } catch (err) {
         console.error('Error loading recent drawings:', err);
     }
 }
+
+
 window.addEventListener('load', loadCanvasState);
 loadRecentDrawings();
