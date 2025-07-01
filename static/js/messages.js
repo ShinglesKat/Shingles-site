@@ -109,6 +109,11 @@ function banUserFromMessage(ip) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const commentForm = document.getElementById('commentForm');
+    if (commentForm) {
+        commentForm.addEventListener('submit', add_message);
+    }
+    
     fetchMessages();
     setInterval(fetchMessages, 1000);
 });
@@ -131,7 +136,7 @@ function diffMessages(newMessages) {
 
     const seen = new Set();
 
-    newMessages.forEach(msg => {
+    newMessages.slice().reverse().forEach(msg => {
         const id = `message-${msg.id}`;
         seen.add(id);
 
@@ -161,36 +166,55 @@ function diffMessages(newMessages) {
 }
 
 function buildMessageHTML(msg) {
-    let html = `
-        ${msg.username}: ${msg.content} <br> ${msg.created}
-    `;
+    const container = document.createElement('div');
 
-    let buttonHTML = '';
+    // Message text (username + message content)
+    const messageText = document.createElement('div');
+    messageText.textContent = `${msg.username}: ${msg.content}`;
+    container.appendChild(messageText);
+
+    // Timestamp on its own line
+    const timestamp = document.createElement('div');
+    timestamp.textContent = msg.created;
+    timestamp.style.fontSize = '0.9em';
+    timestamp.style.color = '#666';
+    container.appendChild(timestamp);
+
+    // Buttons container
+    const buttons = document.createElement('div');
+    buttons.style.marginTop = '5px';
 
     if (msg.can_delete) {
-        buttonHTML += `
-            <form method="POST" action="/delete/${msg.id}" style="display:inline; margin-right:10px;">
-                <button type="submit" style="background-color:#dc3545; color:white; border:none; padding:5px 10px; cursor:pointer;">
-                    Delete Message
-                </button>
-            </form>
-        `;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/delete/${msg.id}`;
+        form.style.display = 'inline';
+        form.style.marginRight = '10px';
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'submit';
+        deleteBtn.textContent = 'Delete Message';
+        deleteBtn.style.cssText = 'background-color:#dc3545; color:white; border:none; padding:5px 10px; cursor:pointer;';
+
+        form.appendChild(deleteBtn);
+        buttons.appendChild(form);
     }
 
     if (msg.can_ban && msg.ip_address) {
-        buttonHTML += `
-            <button onclick="banUserFromMessage('${msg.ip_address}')" style="background-color:#fd7e14; color:white; border:none; padding:5px 10px; cursor:pointer;">
-                Ban User
-            </button>
-        `;
+        const banBtn = document.createElement('button');
+        banBtn.textContent = 'Ban User';
+        banBtn.style.cssText = 'background-color:#fd7e14; color:white; border:none; padding:5px 10px; cursor:pointer;';
+        banBtn.onclick = () => banUserFromMessage(msg.ip_address);
+        buttons.appendChild(banBtn);
     }
 
-    if (buttonHTML) {
-        html += `<div style="margin-top: 5px;">${buttonHTML}</div>`;
+    if (buttons.childNodes.length > 0) {
+        container.appendChild(buttons);
     }
 
-    return html;
+    return container.innerHTML;
 }
+
 
 function fetchMessages() {
     fetch('/api/get_messages')

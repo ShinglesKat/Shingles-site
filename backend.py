@@ -9,6 +9,7 @@ from markupsafe import escape
 import os
 import re
 from dotenv import load_dotenv
+from flask_talisman import Talisman
 
 load_dotenv()
 print("SECRET_KEY:", os.getenv('SECRET_KEY'))
@@ -43,6 +44,25 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 app.secret_key = os.getenv('SECRET_KEY')
     
+csp = {
+    'default-src': ["'self'"],
+    'script-src': ["'self'"], 
+    'style-src': ["'self'", "'unsafe-inline'"], 
+    'img-src': ["'self'", "data:"],
+    'connect-src': ["'self'"],
+}
+
+# Initialize Talisman with headers
+Talisman(app,
+            content_security_policy=csp,
+            content_security_policy_nonce_in=['script'],
+            referrer_policy='strict-origin-when-cross-origin',
+            permissions_policy={
+                "geolocation": [],
+                "camera": [],
+                "microphone": [],
+            })
+
 @app.route('/')
 def home():
     return render_template('index.html')

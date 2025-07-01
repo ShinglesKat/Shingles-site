@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>{{ drawing.piece_name }} by {{ drawing.username }}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    
 </head>
 <body>
     <header>
@@ -16,12 +18,7 @@
                 <li><a class="active" href="canvas">Pixel Canvas</a></li>
                 <li>
                 {% if session.get('username') %}
-                    <a class="active" href="{{ url_for('logout') }}" onclick="return confirmLogout()">Logout ({{ session['username'] }})</a>
-                    <script>
-                        function confirmLogout() {
-                            return confirm("Are you sure you want to log out?");
-                        }
-                    </script>
+                    <a class="active logout-link" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
                 {% else %}
                     <a class="active" href="login">Login</a>
                 {% endif %}
@@ -32,27 +29,8 @@
 
     <h1>{{ drawing.piece_name }}</h1>
     
-    <canvas id="drawingCanvas" width="500" height="500"></canvas>
-    
-    <script>
-        window.onload = function() {
-            const canvas = document.getElementById("drawingCanvas");
-            const ctx = canvas.getContext("2d");
-            
-            const drawingContent = {{ drawing_content_json | tojson }};
-
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Assuming 50x50 grid
-            const cellPixelLength = canvas.width / 50;
-
-            drawingContent.forEach(({x, y, colour}) => {
-                ctx.fillStyle = colour;
-                ctx.fillRect(x * cellPixelLength, y * cellPixelLength, cellPixelLength, cellPixelLength);
-            });
-        };
-    </script>
+    <canvas id="drawingCanvas" width="500" height="500"
+        data-drawing-content='{{ drawing_content_json | tojson | safe }}'></canvas>
     
     <h3>by <a href="/user?id={{ drawing.user_id }}">{{ drawing.username }}</a></h3>
     {% if session_accounttype == 'admin' or session_userid == drawing.user_id %}
@@ -60,5 +38,8 @@
             <button type="submit">Delete Drawing</button>
         </form>
     {% endif %}
+
+    <script src="static/js/drawing_viewer.js"></script>
+    <script src="static/js/cross_site_functions.js"></script>
 </body>
 </html>

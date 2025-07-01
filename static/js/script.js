@@ -13,3 +13,18 @@ function incrementBClicks(){
         fetch("/set_brute",{method: "POST", headers: { "Content-Type": "application/json"}}).then(res=>res.json()).then(data=>{console.log("session set to wade:", data)}).catch(err=>{console.error("Error setting to wade :(", err);});
     }
 }
+
+function confirmLogout() {
+    return confirm("Are you sure you want to log out?");
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const logoutLink = document.querySelector('a.logout-link');
+    if (logoutLink) {
+        logoutLink.addEventListener('click', event => {
+            if (!confirmLogout()) {
+                event.preventDefault();
+            }
+        });
+    }
+});

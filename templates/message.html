@@ -5,6 +5,7 @@
     <title>Shingles's Amazing Website</title>
     <link rel="stylesheet" href="static/css/styles.css">
     <link rel="stylesheet" href="static/css/chatroom.css">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
 
 <body>
@@ -18,12 +19,7 @@
                 <li><a class="active" href="canvas">Pixel Canvas</a></li>
                 <li>
                 {% if session.get('username') %}
-                    <a class="active" href="{{ url_for('logout') }}" onclick="return confirmLogout()">Logout ({{ session['username'] }})</a>
-                    <script>
-                        function confirmLogout() {
-                            return confirm("Are you sure you want to log out?");
-                        }
-                    </script>
+                    <a class="active logout-link" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
                 {% else %}
                     <a class="active" href="login">Login</a>
                 {% endif %}
@@ -37,7 +33,7 @@
             <!-- Messages will appear here -->
         </div>
 
-        <form id="commentForm" onsubmit="add_message(event)" class="chat-form">
+        <form id="commentForm" class="chat-form">
             <input id="nameInput" placeholder="Your name..." required>
             <input id="messageInput" placeholder="Your message... :)" required>
             <button type="submit">Send</button>
@@ -52,6 +48,7 @@
     </footer>
 
     <script src="static/js/messages.js"></script>
+    <script src="static/js/cross_site_functions.js"></script>
 
 </body>
 

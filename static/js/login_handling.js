@@ -54,6 +54,20 @@ async function attempt_login(event){
     }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', attempt_login);
+    }
+
+    if (registerForm) {
+        registerForm.addEventListener('submit', register_account);
+    }
+});
+
+
 async function hashPassword(password) {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);

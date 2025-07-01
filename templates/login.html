@@ -3,6 +3,7 @@
 <head>
     <title>Shingles's amazing website</title>
     <link rel="stylesheet" href="static/css/styles.css">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
     <header>
@@ -15,12 +16,7 @@
                 <li><a class="active" href="canvas">Pixel Canvas</a></li>
                 <li>
                 {% if session.get('username') %}
-                    <a class="active" href="{{ url_for('logout') }}" onclick="return confirmLogout()">Logout ({{ session['username'] }})</a>
-                    <script>
-                        function confirmLogout() {
-                            return confirm("Are you sure you want to log out?");
-                        }
-                    </script>
+                    <a class="active logout-link" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
                 {% else %}
                     <a class="active" href="login">Login</a>
                 {% endif %}
@@ -29,22 +25,21 @@
         </nav>
     </header>
 
-
-
-    <form id="loginForm" onsubmit="attempt_login(event)">
+    <form id="loginForm">
         <h2> Login:</h2>
         <input type="text" id="loginUsernameInput" placeholder="Enter Username...">
         <input type="password" id="loginPasswordInput" placeholder="Enter password..." required>
         <button type="submit">Submit</button>
     </form>
     <br>
-    <form id="registerForm" onsubmit="register_account(event)">
-        <h2>Register:</h2>
-        <input type="text" id="registerUsernameInput" placeholder="Enter Username..." required>
-        <input type="password" id="registerPasswordInput" placeholder="Enter password..." required>
-        <button type="submit">Submit</button>
+    <form id="registerForm">
+    <h2>Register:</h2>
+    <input type="text" id="registerUsernameInput" placeholder="Enter Username..." required>
+    <input type="password" id="registerPasswordInput" placeholder="Enter password..." required>
+    <button type="submit">Submit</button>
+</form>
 
     <script src="static/js/login_handling.js"></script>
+    <script src="static/js/cross_site_functions.js"></script>
 </body>
 </html>
-

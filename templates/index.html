@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 
-
 <head>
     <title>Shingles's amazing website</title>
     <link rel="stylesheet" href="static/css/styles.css">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
 
 <body>
     <header>
-        <h1>Shingles's Awesome We<span class="clickable-b" onclick="incrementBClicks()">b</span>site</h1>
+        <h1>Shingles's Awesome We<span class="clickable-b">b</span>site</h1>
         <hr class="header-separator"/>
         <nav class="topnav">
             <ul>
@@ -18,12 +18,7 @@
                 <li><a class="active" href="canvas">Pixel Canvas</a></li>
                 <li>
                 {% if session.get('username') %}
-                    <a class="active" href="{{ url_for('logout') }}" onclick="return confirmLogout()">Logout ({{ session['username'] }})</a>
-                    <script>
-                        function confirmLogout() {
-                            return confirm("Are you sure you want to log out?");
-                        }
-                    </script>
+                    <a class="active logout-link" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
                 {% else %}
                     <a class="active" href="login">Login</a>
                 {% endif %}
@@ -31,32 +26,34 @@
             </ul>
         </nav>
     </header>
-    
-<div class="introduction">
-    <img src="/static/images/spooks.png" alt="Shingles" width="400" height="400" title="Art by @NimbusBean on telegram :)">
-    <h2>Welcome to my website!</h2>
-    I am currently in the process of adding an account system, as well the ability to save pixel canvas creation to your account and share them with others.<br> Stay tuned!
-</div>
 
-{% if session.get('accounttype') == 'admin' %}
-    <a class="active" href="admin">Admin panel</a>
-{% endif %}
-    
-<!-- keep content above :)-->
-<footer>
-    <a href="https://rezzy.fr" target="_blank">
-        <img alt="banner2" src="static/images/banner2.gif">
-    </a>
-    
-    <a href="https://shingles.lol" target="_blank">
-        <img alt="Unknown :]" src="static/images/UnknownTurnShrunk.gif">
-    </a>
-    
-    <a href="https://vapore.online/" target="_blank">
-        <img alt="Vapore" src="static/images/vapore.png">
-    </a>
-</footer>
+    <div class="introduction">
+        <img src="/static/images/spooks.png" alt="Shingles" width="400" height="400" title="Art by @NimbusBean on telegram :)">
+        <h2>Welcome to my website!</h2>
+        I am currently in the process of adding an account system, as well the ability to save pixel canvas creation to your account and share them with others.<br> Stay tuned!
+    </div>
 
-<script src="static/js/script.js"></script>
+    {% if session.get('accounttype') == 'admin' %}
+        <a class="active" href="admin">Admin panel</a>
+    {% endif %}
+
+    <!-- keep content above :)-->
+    <footer>
+        <a href="https://rezzy.fr" target="_blank">
+            <img alt="banner2" src="static/images/banner2.gif">
+        </a>
+
+        <a href="https://shingles.lol" target="_blank">
+            <img alt="Unknown :]" src="static/images/UnknownTurnShrunk.gif">
+        </a>
+
+        <a href="https://vapore.online/" target="_blank">
+            <img alt="Vapore" src="static/images/vapore.png">
+        </a>
+    </footer>
+
+    <script src="static/js/script.js"></script>
+    <script src="static/js/cross_site_functions.js"></script>
 </body>
+
 </html>
