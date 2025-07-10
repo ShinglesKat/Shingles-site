@@ -10,6 +10,11 @@ import os
 import re
 from dotenv import load_dotenv
 from flask_talisman import Talisman
+import requests
+
+# Freeview constants
+FREEVIEW_PAGE = "https://www.matthuisman.nz/2021/02/new-zealand-apks-for-sideloading.html"
+FREEVIEW_URL_PREFIX = "https://f.mjh.nz/apk/nz/freeview-atv-unlocked-"
 
 load_dotenv()
 print("SECRET_KEY:", os.getenv('SECRET_KEY'))
@@ -66,6 +71,21 @@ Talisman(app,
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/freeview')
+def freeview_redirect():
+    """
+    Redirects to Matt Huismann's blog and scrapes the latest freeview apk
+    """
+    
+    resp = requests.get(FREEVIEW_PAGE)
+    if resp.status_code != 200:
+        return jsonify({"error": f"Matt Huisman is down :("}), 404
+    
+    contents = str(resp.content)
+    file_version = contents.split(FREEVIEW_URL_PREFIX, 1)[1].split(".apk", 1)[0]
+    return redirect(f"{FREEVIEW_URL_PREFIX}{file_version}.apk", 302)
+
 
 @app.route('/message')
 def render_message_page():
