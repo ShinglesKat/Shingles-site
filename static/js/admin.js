@@ -1,15 +1,27 @@
-async function fetch_user(event){
+async function fetch_user(event) {
     event.preventDefault();
 
-    const userId = document.getElementById('loginUsernameInput').value;
+    const userId = document.getElementById('IDInput').value.trim();
+    const userUsername = document.getElementById('loginUsernameInput').value.trim();
 
     try {
-        const response = await fetch(`/api/userinfo?id=${encodeURIComponent(userId)}`);
-        if (!response.ok) throw new Error('User not found');
+        let response;
+
+        if (userId) {
+            // Fetch by ID
+            response = await fetch(`/api/userinfo?id=${encodeURIComponent(userId)}`);
+            if (!response.ok) throw new Error('ID not found');
+        } else if (userUsername) {
+            // Fetch by username if no ID
+            response = await fetch(`/api/userinfo?username=${encodeURIComponent(userUsername)}`);
+            if (!response.ok) throw new Error('Username not found');
+        } else {
+            throw new Error('Please provide either a User ID or Username');
+        }
 
         const user = await response.json();
-        const display = document.getElementById('userDisplay');
 
+        const display = document.getElementById('userDisplay');
         display.innerHTML = `
             <h3>Editing User ID: ${user.id}</h3>
             <input type="hidden" id="editUserId" value="${user.id}">
@@ -26,11 +38,12 @@ async function fetch_user(event){
         `;
 
         document.getElementById('saveUserButton').addEventListener('click', saveUserChanges);
-        
+
     } catch (err) {
         alert(`Error: ${err.message}`);
     }
 }
+
 
 
 async function saveUserChanges() {

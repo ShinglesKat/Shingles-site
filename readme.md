@@ -1,4 +1,6 @@
-Accounts:
+# The Shingle Website
+
+## Accounts:
 
 Upon login set:
 session['username'] = username

@@ -641,13 +641,20 @@ def delete_drawing(drawing_id):
 @app.route('/api/userinfo')
 def api_get_userinfo():
     user_id = request.args.get('id')
+    username = request.args.get('username')
 
-    if not user_id:
-        return jsonify({"error": "No user ID provided"}), 400
+    if user_id:
+        query = "SELECT * FROM userinfo WHERE id = ?"
+        param = (user_id,)
+    elif username:
+        query = "SELECT * FROM userinfo WHERE username = ?"
+        param = (username,)
+    else:
+        return jsonify({"error": "No user ID or username provided"}), 400
 
     conn = get_db_connections('userinfo.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM userinfo WHERE id = ?", (user_id,))
+    cursor.execute(query, param)
     user = cursor.fetchone()
     conn.close()
 
@@ -655,6 +662,7 @@ def api_get_userinfo():
         return jsonify({"error": "User not found"}), 404
 
     return jsonify(dict(user))
+
 
 @app.route('/api/update_user', methods=['POST'])
 def update_user():
