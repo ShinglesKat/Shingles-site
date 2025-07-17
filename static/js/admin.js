@@ -22,12 +22,16 @@ async function fetch_user(event){
             <input type="text" id="editUserType" value="${user.userType}"><br>
             <label>Created pixel drawing IDs:</label>
             <input type="text" id="editDrawings" value="${user.creationsIDs}"><br>
-            <button onclick="saveUserChanges()">Save Changes</button>
+            <button id="saveUserButton">Save Changes</button>
         `;
+
+        document.getElementById('saveUserButton').addEventListener('click', saveUserChanges);
+        
     } catch (err) {
         alert(`Error: ${err.message}`);
     }
 }
+
 
 async function saveUserChanges() {
     const id = document.getElementById('editUserId').value;
@@ -72,3 +76,7 @@ async function hashPassword(password) {
     const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
     return hashHex;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('userInfo').addEventListener('submit', fetch_user);
+});

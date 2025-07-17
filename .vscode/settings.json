@@ -10,5 +10,6 @@
         "topnav",
         "userdrawings",
         "userinfo"
-    ]
+    ],
+    "livePreview.portNumber": 5000
 }

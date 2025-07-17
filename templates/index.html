@@ -27,15 +27,17 @@
         </nav>
     </header>
 
+    {% if session.get('accounttype') == 'admin' %}
+        <a class="active" href="admin">Admin panel</a>
+    {% endif %}
+    
     <div class="introduction">
         <img src="/static/images/spooks.png" alt="Shingles" width="400" height="400" title="Art by @NimbusBean on telegram :)">
         <h2>Welcome to my website!</h2>
         I am currently in the process of adding an account system, as well the ability to save pixel canvas creation to your account and share them with others.<br> Stay tuned!
     </div>
 
-    {% if session.get('accounttype') == 'admin' %}
-        <a class="active" href="admin">Admin panel</a>
-    {% endif %}
+    
 
     <!-- keep content above :)-->
     <footer>
