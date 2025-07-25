@@ -2,9 +2,10 @@
  * @type HTMLCanvasElement
  * CREDIT TO dcode ON YOUTUBE FOR PIXEL ART CANVAS TUTORIAL
  */
+import { buildMiniCanvas } from './minicanvas_helper.js';
 
 let isDrawing = false;
-let lastHoveredCell = { x: -1, y: -1 }
+let lastHoveredCell = { x: -1, y: -1 };
 
 const canvas = document.getElementById("canvas");
 const guide = document.getElementById("guide");
@@ -17,13 +18,14 @@ const cellPixelLength = canvas.width / CELL_SIDE_COUNT;
 const colourHistory = {};
 let drawnCells = [];
 
-//Set default colour
+// Set default colour
 colourInput.value = "#009578";
 
-//Init canvas background colour
+// Init canvas background colour
 drawingContext.fillStyle = "#ffffff";
 drawingContext.fillRect(0, 0, canvas.width, canvas.height);
 
+// Initialize colourHistory to white for every cell
 for (let i = 0; i < CELL_SIDE_COUNT; i++) {
     for (let j = 0; j < CELL_SIDE_COUNT; j++) {
         colourHistory[`${i}_${j}`] = "#ffffff";
@@ -43,11 +45,11 @@ function fillCell(cellX, cellY) {
     drawnCells = drawnCells.filter(cell => !(cell.x === cellX && cell.y === cellY));
     drawnCells.push({ x: cellX, y: cellY, colour: colour });
 
-    saveCanvasState();  //Save after each draw
+    saveCanvasState();  // Save after each draw
 }
 
 function saveCanvasState() {
-    //Save the current state of drawn cells to localStorage
+    // Save the current state of drawn cells to localStorage
     localStorage.setItem('canvasState', JSON.stringify(drawnCells));
 }
 
@@ -56,7 +58,7 @@ function loadCanvasState() {
     if (savedState) {
         drawnCells = JSON.parse(savedState);
 
-        //Redraw the canvas based on the saved state
+        // Redraw the canvas based on the saved state
         drawnCells.forEach(cell => {
             const { x, y, colour } = cell;
             const startX = x * cellPixelLength;
@@ -69,7 +71,7 @@ function loadCanvasState() {
     }
 }
 
-//Setup the guide
+// Setup the guide
 {
     guide.style.width = `${canvas.width}px`;
     guide.style.height = `${canvas.height}px`;
@@ -203,15 +205,17 @@ const clearCanvasButton = document.getElementById("clearCanvasBtn");
 const saveCanvasButton = document.getElementById("saveCanvasBtn");
 const loadCanvasButton = document.getElementById("loadCanvasBtn"); // This seems to be a general load button, not specific to recent drawings
 
+
 attachButtonListener(clearCanvasButton, "click", clearCanvas);
 attachButtonListener(saveCanvasButton, "click", saveCanvasData);
-// Assuming loadCanvasButton is for triggering the modal to load drawings
-// attachButtonListener(loadCanvasButton, "click", showLoadDrawingModal); // You'd need a function for this
+// attachButtonListener(loadCanvasButton, "click", showLoadDrawingModal);
 
 function clearCanvas() {
     const yes = confirm("Are you sure?");
 
-    if (!yes) return;
+    if (!yes) {
+        return;
+    }
     drawingContext.fillStyle = "#ffffff";
     drawingContext.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -244,8 +248,8 @@ function showNameModal() {
             const pieceName = nameInput.value.trim();
             const isPrivate = privateCheckbox.checked;
 
-            if (pieceName.length < 3 || pieceName.length > 16) {
-                alert("Name must be between 3 and 16 characters.");
+            if (pieceName.length < 3 || pieceName.length > 30) {
+                alert("Name must be between 3 and 30 characters.");
                 return;
             }
 
@@ -264,11 +268,15 @@ async function saveCanvasData() {
     }
 
     try {
-        const response = await fetch('/get_session_data');
-        if (!response.ok) throw new Error("You must be logged in to do that!");
+        const response = await fetch('/api/get_session_data');
+        if (!response.ok) {
+            throw new Error("You must be logged in to do that!");
+        }
 
         const result = await showNameModal();
-        if (!result) return;
+        if (!result) {
+            return;
+        }
 
         const { pieceName, isPrivate } = result;
         const json = JSON.stringify(drawnCells);
@@ -284,28 +292,94 @@ async function saveCanvasData() {
             piece_id: currentPieceId
         };
 
-        const saveResponse = await fetch('/upload', {
+        const saveResponse = await fetch('/api/save_drawing', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dataToSend)
         });
 
-        if (!saveResponse.ok) throw new Error("Failed to save canvas");
-
-        const canvasSaveResponse = await saveResponse.json();
-
-        if (canvasSaveResponse.piece_id) {
-            currentPieceId = canvasSaveResponse.piece_id;
+        if (!saveResponse.ok) {
+            throw new Error("Failed to save drawing");
         }
 
-        alert(canvasSaveResponse.message || "Canvas saved successfully!");
+        const saveResult = await saveResponse.json();
+
+        if (saveResult && saveResult.id) {
+            currentPieceId = saveResult.id;
+            alert("Drawing saved!");
+        }
     } catch (err) {
-        console.error("Save error:", err);
-        alert(err.message || "An error occurred while saving the canvas.");
+        alert(err.message);
     }
 }
 
-// Renamed and modified loadCanvasData to render a drawing (e.g., in a gallery)
+async function loadRecentDrawings() {
+    try {
+        const response = await fetch('/api/retrieve_drawings?limit=5');
+        const drawings = await response.json();
+
+        if (!Array.isArray(drawings)) {
+            console.error('Unexpected response format:', drawings);
+            return;
+        }
+
+        const drawingsContainer = document.getElementById('recentDrawings');
+        drawingsContainer.innerHTML = '';
+
+        if (drawings.length === 0) {
+            drawingsContainer.innerHTML = '<p>No recent drawings found.</p>';
+            return;
+        }
+
+        for (const drawing of drawings) {
+            await renderDrawingOnMiniCanvas(drawing, drawingsContainer);
+        }
+    } catch (err) {
+        console.error('Error loading recent drawings:', err);
+    }
+}
+
+async function loadAllDrawings() {
+    try {
+        const response = await fetch('/api/retrieve_drawings'); // all drawings, newest first
+        const drawings = await response.json();
+
+        if (!Array.isArray(drawings) || drawings.length === 0) {
+            alert('No drawings found.');
+            return;
+        }
+
+        // Show newest 5 in #recentDrawings
+        const recentContainer = document.getElementById('recentDrawings');
+        recentContainer.innerHTML = '';
+        const newestDrawings = drawings.slice(0, 5);
+        for (const drawing of newestDrawings) {
+            await renderDrawingOnMiniCanvas(drawing, recentContainer);
+        }
+
+        // Show the rest in a new container below the button
+        const olderContainer = document.getElementById('allOlderDrawings');
+
+        // Clear older drawings but keep the header
+        olderContainer.innerHTML = '';
+
+        const olderDrawings = drawings.slice(5);
+        if (olderDrawings.length === 0) {
+            olderContainer.innerHTML += '<p>No older drawings.</p>';
+        } else {
+            for (const drawing of olderDrawings) {
+                await renderDrawingOnMiniCanvas(drawing, olderContainer);
+            }
+        }
+    } catch (err) {
+        console.error('Failed to load drawings:', err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('loadAllDrawingsBtn').addEventListener('click', loadAllDrawings);
+});
+
 async function renderDrawingOnMiniCanvas(drawing, container) {
     const canvasContainer = document.createElement('div');
     canvasContainer.classList.add('drawing-container');
@@ -314,24 +388,7 @@ async function renderDrawingOnMiniCanvas(drawing, container) {
     drawingLink.href = `/drawing?id=${drawing.id}`;
     drawingLink.target = "_blank";
 
-    const miniCanvas = document.createElement('canvas');
-    const miniCanvasSize = 150;
-    miniCanvas.width = miniCanvasSize;
-    miniCanvas.height = miniCanvasSize;
-    const context = miniCanvas.getContext('2d');
-
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, miniCanvas.width, miniCanvas.height);
-
-    const cells = JSON.parse(drawing.content);
-    const miniCellPixelLength = miniCanvasSize / CELL_SIDE_COUNT; // Use CELL_SIDE_COUNT for consistency
-
-    cells.forEach(cell => {
-        const { x, y, colour } = cell;
-        context.fillStyle = colour;
-        context.fillRect(x * miniCellPixelLength, y * miniCellPixelLength, miniCellPixelLength, miniCellPixelLength);
-    });
-
+    const miniCanvas = buildMiniCanvas(drawing, { size: 150 });
     drawingLink.appendChild(miniCanvas);
 
     const nameLabel = document.createElement('p');
@@ -352,32 +409,6 @@ async function renderDrawingOnMiniCanvas(drawing, container) {
 }
 
 
-async function loadRecentDrawings() {
-    try {
-        const response = await fetch('/retrieve_latest');
-        const drawings = await response.json();
-
-        if (!Array.isArray(drawings)) {
-            console.error('Unexpected response format:', drawings);
-            return;
-        }
-
-        const drawingsContainer = document.getElementById('recentDrawings');
-        drawingsContainer.innerHTML = '';
-
-        if (drawings.length === 0) {
-            drawingsContainer.innerHTML = '<p>No recent drawings found.</p>';
-            return;
-        }
-
-        for (const drawing of drawings) {
-            await renderDrawingOnMiniCanvas(drawing, drawingsContainer); // Use the renamed function
-        }
-    } catch (err) {
-        console.error('Error loading recent drawings:', err);
-    }
-}
-
-
-window.addEventListener('load', loadCanvasState);
+// Initial load from saved canvas state in localStorage
+loadCanvasState();
 loadRecentDrawings();

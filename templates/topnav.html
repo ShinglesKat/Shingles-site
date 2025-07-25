@@ -1,0 +1,20 @@
+<!-- templates/topnav.html -->
+<header>
+    <h1 style="display:inline;">Shingles's Awesome Website</h1>
+    <hr class="header-separator"/>
+    <nav class="topnav">
+        <ul>
+            <li><a class="active" href="/">Home</a></li>
+            <li><a class="active" href="message">Leave a Message</a></li>
+            <li><a class="active" href="canvas">Pixel Canvas</a></li>
+            <li>
+            {% if session.get('username') %}
+                <a class="active logout-link" href="#">Logout ({{ session['username'] }})</a>
+            {% else %}
+                <a class="active" href="login">Login</a>
+            {% endif %}
+            </li>
+        </ul>
+    </nav>
+</header>
+

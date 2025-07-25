@@ -1,28 +1,50 @@
 async function register_account(event){
     event.preventDefault();
-    const submittedUsernameAttempt = document.getElementById('registerUsernameInput').value
-    const submittedPasswordAttempt = document.getElementById('registerPasswordInput').value
-
+    const submittedUsernameAttempt = document.getElementById('registerUsernameInput').value.trim();
+    const submittedPasswordAttempt = document.getElementById('registerPasswordInput').value.trim();
+    
+    if (!submittedUsernameAttempt || !submittedPasswordAttempt) {
+        alert("Please fill in both username and password");
+        return;
+    }
+    
     try{
         const hashedPassword = await hashPassword(submittedPasswordAttempt);
-
-        const response = await fetch("/register_account", {
+        const response = await fetch("/api/register_account", {
             method: "POST",
             headers:{
-                "Content-Type": "application/x-www-form-urlencoded",
+                "Content-Type": "application/json",
             },
-            body: `username=${encodeURIComponent(submittedUsernameAttempt)}&password=${encodeURIComponent(hashedPassword)}`
+            body: JSON.stringify({
+                username: submittedUsernameAttempt,
+                password: hashedPassword
+            })
         });
-
-        if (response.status === 200) {
-            alert("Account created!");
-        } else {
+        
+        console.log("Response status:", response.status);
+        console.log("Response ok:", response.ok);
+        
+        if (response.ok) {
             const resData = await response.json();
-            alert("Registration failed: " + (resData.error || "Unknown error"));
+            alert("Account created!");
+            // Clear the form
+            document.getElementById('registerUsernameInput').value = '';
+            document.getElementById('registerPasswordInput').value = '';
+        } else {
+            // Check if response is JSON or HTML
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                const resData = await response.json();
+                alert("Registration failed: " + (resData.error || "Unknown error"));
+            } else {
+                const resText = await response.text();
+                console.log("Server returned HTML:", resText);
+                alert("Registration failed: Server error (check console)");
+            }
         }
-
     } catch (error) {
         console.error("Registration error:", error);
+        alert("Registration failed: " + error.message);
     }
 }
 
@@ -34,7 +56,7 @@ async function attempt_login(event){
     const hashedPassword = await hashPassword(submittedPasswordAttempt);
     
     try{
-        const response = await fetch("/login", {
+        const response = await fetch("/api/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",

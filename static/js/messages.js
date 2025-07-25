@@ -21,7 +21,7 @@ async function add_message(event) {
             return;
         }
 
-        const response = await fetch("/message/post_message", {
+        const response = await fetch("/api/post_message", {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
@@ -58,6 +58,7 @@ setInterval(() => {
         }
     });
 }, 5000);
+
 async function retrieve_messages(){
     try {
         const response = await fetch("/api/get_messages");
@@ -79,32 +80,79 @@ async function retrieve_messages(){
 
 let sessionCache = null;
 
+// Add function to check and cache session info
+async function checkSession() {
+    try {
+        const response = await fetch('/api/get_session_data');
+        if (response.ok) {
+            sessionCache = await response.json();
+            console.log('Session cached:', sessionCache);
+        } else if (response.status === 401) {
+            console.log('User not logged in');
+            sessionCache = { accounttype: null };
+        } else {
+            console.log('Session check failed, assuming no admin privileges');
+            sessionCache = { accounttype: null };
+        }
+    } catch (error) {
+        console.error('Error checking session:', error);
+        sessionCache = { accounttype: null };
+    }
+}
+
 function banUserFromMessage(ip) {
+    console.log('banUserFromMessage called with IP:', ip);
+    
+    // First, let's check if we have session info
+    console.log('Current sessionCache:', sessionCache);
+    
+    // Check if user has admin privileges first
+    if (!sessionCache || sessionCache.accounttype !== 'admin') {
+        console.log('Permission denied - not admin or no session');
+        alert('You do not have permission to ban users.');
+        return;
+    }
+    
     const duration = prompt("How long should the user be banned for? ('1h', '24h', '7d'):");
     if (!duration) {
+        console.log('Ban cancelled - no duration provided');
         return;
     }
 
     const message = prompt("Enter a reason for the ban:");
     if (message === null) {
+        console.log('Ban cancelled - no reason provided');
         return;
     }
 
-    fetch("/ban_ip", {
+    console.log('Sending ban request:', { ip, reason: message, ban_duration: duration });
+
+    fetch("/api/ban_ip", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify({ ip, reason: message, ban_duration: duration })
     })
     .then(res => {
+        console.log('Ban response status:', res.status);
         if (res.ok) {
-            alert("User banned successfully.");
+            return res.json().then(data => {
+                console.log('Ban success:', data);
+                alert("User banned successfully.");
+            });
         } else {
-            alert("Failed to ban user.");
+            return res.json().then(data => {
+                console.error('Ban failed:', data);
+                alert(`Failed to ban user: ${data.error || 'Unknown error'}`);
+            }).catch(() => {
+                alert(`Failed to ban user. Status: ${res.status}`);
+            });
         }
     })
     .catch(err => {
         console.error("Ban error:", err);
-        alert("Error banning user.");
+        alert("Error banning user: " + err.message);
     });
 }
 
@@ -113,6 +161,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (commentForm) {
         commentForm.addEventListener('submit', add_message);
     }
+    
+    // Check session on page load
+    checkSession();
     
     fetchMessages();
     setInterval(fetchMessages, 1000);
@@ -146,6 +197,10 @@ function diffMessages(newMessages) {
             li = document.createElement('li');
             li.setAttribute('data-id', id);
             li.innerHTML = buildMessageHTML(msg);
+            
+            // Add event listeners after setting innerHTML
+            attachEventListeners(li, msg);
+            
             messageList.prepend(li);
         } else {
             // Check if content changed
@@ -153,6 +208,8 @@ function diffMessages(newMessages) {
             temp.innerHTML = buildMessageHTML(msg);
             if (li.innerHTML !== temp.innerHTML) {
                 li.innerHTML = buildMessageHTML(msg);
+                // Re-attach event listeners after updating innerHTML
+                attachEventListeners(li, msg);
             }
         }
     });
@@ -163,6 +220,20 @@ function diffMessages(newMessages) {
             li.remove();
         }
     });
+}
+
+function attachEventListeners(li, msg) {
+    // Find and attach event listeners to ban buttons
+    if (msg.can_ban && msg.ip_address) {
+        const banBtn = li.querySelector('.ban-button');
+        if (banBtn) {
+            banBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Ban button clicked for IP:', msg.ip_address);
+                banUserFromMessage(msg.ip_address);
+            });
+        }
+    }
 }
 
 function buildMessageHTML(msg) {
@@ -187,7 +258,7 @@ function buildMessageHTML(msg) {
     if (msg.can_delete) {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `/delete/${msg.id}`;
+        form.action = `/api/delete_message/${msg.id}`;
         form.style.display = 'inline';
         form.style.marginRight = '10px';
 
@@ -202,9 +273,11 @@ function buildMessageHTML(msg) {
 
     if (msg.can_ban && msg.ip_address) {
         const banBtn = document.createElement('button');
+        banBtn.type = 'button';
+        banBtn.className = 'ban-button'; // Add class for easy selection
         banBtn.textContent = 'Ban User';
-        banBtn.style.cssText = 'background-color:#fd7e14; color:white; border:none; padding:5px 10px; cursor:pointer;';
-        banBtn.onclick = () => banUserFromMessage(msg.ip_address);
+        banBtn.style.cssText = 'background-color:#fd7e14; color:white; border:none; padding:5px 10px; cursor:pointer; margin-left: 5px;';
+        
         buttons.appendChild(banBtn);
     }
 
@@ -214,7 +287,6 @@ function buildMessageHTML(msg) {
 
     return container.innerHTML;
 }
-
 
 function fetchMessages() {
     fetch('/api/get_messages')

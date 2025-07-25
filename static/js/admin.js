@@ -1,26 +1,24 @@
 async function fetch_user(event) {
     event.preventDefault();
-
     const userId = document.getElementById('IDInput').value.trim();
     const userUsername = document.getElementById('loginUsernameInput').value.trim();
-
     try {
         let response;
-
         if (userId) {
             // Fetch by ID
             response = await fetch(`/api/userinfo?id=${encodeURIComponent(userId)}`);
-            if (!response.ok) throw new Error('ID not found');
+            if (!response.ok) {
+                throw new Error('ID not found');
+            }
         } else if (userUsername) {
-            // Fetch by username if no ID
             response = await fetch(`/api/userinfo?username=${encodeURIComponent(userUsername)}`);
-            if (!response.ok) throw new Error('Username not found');
+            if (!response.ok) {
+                throw new Error('Username not found');
+            }
         } else {
             throw new Error('Please provide either a User ID or Username');
         }
-
         const user = await response.json();
-
         const display = document.getElementById('userDisplay');
         display.innerHTML = `
             <h3>Editing User ID: ${user.id}</h3>
@@ -36,9 +34,7 @@ async function fetch_user(event) {
             <input type="text" id="editDrawings" value="${user.creationsIDs}"><br>
             <button id="saveUserButton">Save Changes</button>
         `;
-
         document.getElementById('saveUserButton').addEventListener('click', saveUserChanges);
-
     } catch (err) {
         alert(`Error: ${err.message}`);
     }

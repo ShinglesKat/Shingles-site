@@ -1,61 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <title>Shingles's amazing website</title>
-    <link rel="stylesheet" href="static/css/styles.css">
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-</head>
+{% block title %}Shingles's amazing website{% endblock %}
 
-<body>
-    <header>
-        <h1>Shingles's Awesome We<span class="clickable-b">b</span>site</h1>
-        <hr class="header-separator"/>
-        <nav class="topnav">
-            <ul>
-                <li><a class="active" href="/">Home</a></li>
-                <li><a class="active" href="message">Leave a Message</a></li>
-                <li><a class="active" href="canvas">Pixel Canvas</a></li>
-                <li>
-                {% if session.get('username') %}
-                    <a class="active logout-link" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
-                {% else %}
-                    <a class="active" href="login">Login</a>
-                {% endif %}
-                </li>
-            </ul>
-        </nav>
-    </header>
+{% block extra_head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+{% endblock %}
 
-    {% if session.get('accounttype') == 'admin' %}
-        <a class="active" href="admin">Admin panel</a>
-    {% endif %}
+{% block content %}
     
+    {% if session.get('accounttype') == 'admin' %}
+        <a class="active" href="admin" style="margin-top: 1rem;">Admin panel</a>
+    {% endif %}
     <div class="introduction">
-        <img src="/static/images/spooks.png" alt="Shingles" width="400" height="400" title="Art by @NimbusBean on telegram :)">
+        <img src="{{ url_for('static', filename='images/spooks.png') }}" alt="Shingles" width="400" height="400" title="Art by @NimbusBean on telegram :)">
         <h2>Welcome to my website!</h2>
-        I am currently in the process of adding an account system, as well the ability to save pixel canvas creation to your account and share them with others.<br> Stay tuned!
+        I am currently in the process of adding an account system, as well the ability to save pixel canvas creations to your account and share them with others.<br> Stay tuned!
     </div>
 
-    
-
-    <!-- keep content above :)-->
-    <footer>
+    <footer style="margin-top: 2rem;">
         <a href="https://rezzy.fr" target="_blank">
-            <img alt="banner2" src="static/images/banner2.gif">
+            <img alt="banner2" src="{{ url_for('static', filename='images/banner2.gif') }}">
         </a>
-
         <a href="https://shingles.lol" target="_blank">
-            <img alt="Unknown :]" src="static/images/UnknownTurnShrunk.gif">
+            <img alt="Unknown :]" src="{{ url_for('static', filename='images/UnknownTurnShrunk.gif') }}">
         </a>
-
         <a href="https://vapore.online/" target="_blank">
-            <img alt="Vapore" src="static/images/vapore.png">
+            <img alt="Vapore" src="{{ url_for('static', filename='images/vapore.png') }}">
         </a>
     </footer>
+{% endblock %}
 
-    <script src="static/js/script.js"></script>
-    <script src="static/js/cross_site_functions.js"></script>
-</body>
-
-</html>
+{% block extra_scripts %}
+    <script src="{{ url_for('static', filename='js/cross_site_functions.js') }}"></script>
+{% endblock %}

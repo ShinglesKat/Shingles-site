@@ -18,12 +18,7 @@
                 <li><a class="active" href="canvas">Pixel Canvas</a></li>
                 <li>
                 {% if session.get('username') %}
-                    <a class="active logout-link" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
-                    <script>
-                        function confirmLogout() {
-                            return confirm("Are you sure you want to log out?");
-                        }
-                    </script>
+                    <a href="/logout" class="active logout-link">Logout ({{ session['username'] }})</a>
                 {% else %}
                     <a class="active" href="login">Login</a>
                 {% endif %}
@@ -44,7 +39,7 @@
 
     <input type="hidden" id="loginUsernameInput" value="{{ user.id }}">
 
-    <script src="static/js/userpage.js"></script>
+    <script type="module" src="static/js/userpage.js"></script>
     <script src="static/js/cross_site_functions.js"></script>
 
 </body>

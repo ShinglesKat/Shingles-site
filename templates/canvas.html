@@ -1,31 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Shingles's amazing website</title>
-    <link rel="stylesheet" href="static/css/styles.css">
-    <link rel="stylesheet" href="static/css/canvas.css">
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-</head>
-<body>
-    <header>
-        <h1 style="display:inline;">Shingles's Awesome Website</h1>
-        <hr class="header-separator"/>
-        <nav class="topnav">
-            <ul>
-                <li><a class="active" href="/">Home</a></li>
-                <li><a class="active" href="message">Leave a Message</a></li>
-                <li><a class="active" href="canvas">Pixel Canvas</a></li>
-                <li>
-                {% if session.get('username') %}
-                    <a class="active logout-link" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
-                {% else %}
-                    <a class="active" href="login">Login</a>
-                {% endif %}
-                </li>
-            </ul>
-        </nav>
-    </header>
+{% extends "base.html" %}
 
+{% block title %}Pixel Canvas - Shingles{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/canvas.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+{% endblock %}
+
+{% block content %}
     <div id="canvasWrapper">
         <div id="canvasContainer">
             <canvas id="canvas" width="750" height="750"></canvas>
@@ -59,16 +41,23 @@
         </div>
     </div>
 
-    <div>
-        <button id="clearCanvasBtn">Clear Canvas</button>
-        <button id="saveCanvasBtn">Save & Upload Canvas</button>
-        <button id="loadCanvasBtn">Load Canvas (Coming soon)</button>
+    <div class="canvas-button-wrapper">
+        <button class="canvas-action-btn" id="clearCanvasBtn">Clear Canvas</button>
+        <button class="canvas-action-btn" id="saveCanvasBtn">Save & Upload Canvas</button>
+        <button class="canvas-action-btn" id="loadCanvasBtn">Load Canvas (Coming soon)</button>
+        <a class="canvas-action-btn" href="live_canvas">Switch to multiplayer drawing!</a>
     </div>
 
-    <a class="active" href="live_canvas">Switch to multiplayer drawing!</a>
-
+    
     <h3>Recently uploaded:</h3>
     <div id="recentDrawings"></div>
+        <div class="canvas-button-wrapper">
+            <button id="loadAllDrawingsBtn" class="canvas-action-btn">Show All Drawings</button>
+        </div>
+            <div id="allOlderDrawings">
+        </div>
+    </div>
+
 
 
     <div id="customModal" class="modal hidden">
@@ -88,9 +77,9 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-    <script src="static/js/solo_pixel_canvas.js" defer></script>
-    <script src="static/js/cross_site_functions.js"></script>
-</body>
-</html>
-
+{% block extra_scripts %}
+    <script type="module" src="{{ url_for('static', filename='js/solo_pixel_canvas.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cross_site_functions.js') }}"></script>
+{% endblock %}

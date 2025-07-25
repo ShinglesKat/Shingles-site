@@ -1,33 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Shingles's amazing website</title>
-    <link rel="stylesheet" href="static/css/styles.css">
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-</head>
-<body>
-    <header>
-        <h1 style="display:inline;">Shingles's Awesome Website</h1>
-        <hr class="header-separator"/>
-        <nav class="topnav">
-            <ul>
-                <li><a class="active" href="/">Home</a></li>
-                <li><a class="active" href="message">Leave a Message</a></li>
-                <li><a class="active" href="canvas">Pixel Canvas</a></li>
-                <li>
-                {% if session.get('username') %}
-                    <a class="active logout-link" href="{{ url_for('logout') }}">Logout ({{ session['username'] }})</a>
-                {% else %}
-                    <a class="active" href="login">Login</a>
-                {% endif %}
-                </li>
-            </ul>
-        </nav>
-    </header>
+{% extends "base.html" %}
 
-    Admin!
+{% block title %}Admin Panel - Shingles{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+{% endblock %}
+
+{% block content %}
+
+    <h2>Admin!</h2>
+
     <form id="userInfo">
-        <h2>User Lookup:</h2>
+        <h3>User Lookup:</h3>
         <input type="text" id="IDInput" placeholder="Enter ID...">
         <input type="text" id="loginUsernameInput" placeholder="Enter Username...">
         <button type="submit">Submit</button>
@@ -41,9 +25,10 @@
             <div>{{ user['username'] }}</div><br>
         {% endfor %}
     </div>
-    
-    <script src="static/js/admin.js"></script>
-    <script src="static/js/cross_site_functions.js"></script>
-</body>
-</html>
 
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cross_site_functions.js') }}"></script>
+{% endblock %}

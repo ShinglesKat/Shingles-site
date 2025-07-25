@@ -203,7 +203,7 @@ function fillCell(cellX, cellY) {
     drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
     colourHistory[`${cellX}_${cellY}`] = colourInput.value;
 
-    fetch("/canvas/updatePixel", {
+    fetch("/api/canvas/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ x: cellX, y: cellY, colour: colourInput.value }),
@@ -361,7 +361,7 @@ function showTooltip(content, clientX, clientY, ip) {
                     return;
                 }
 
-                fetch("/ban_ip", {
+                fetch("/api/ban_ip", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ ip, reason: message, ban_duration: duration })
@@ -384,7 +384,7 @@ function showTooltip(content, clientX, clientY, ip) {
     if (sessionCache) {
         renderTooltip(sessionCache.accounttype === 'admin');
     } else {
-        fetch('/get_session_data')
+        fetch('/api/get_session_data')
             .then(res => res.ok ? res.json() : Promise.reject('Not logged in'))
             .then(data => {
                 sessionCache = data;
@@ -412,7 +412,7 @@ function clearCanvas() {
         }
     }
 
-    fetch("/canvas/clear", {
+    fetch("/api/canvas/clear", {
         method: "POST"
     }).then(res => res.json())
         .then(data => {
