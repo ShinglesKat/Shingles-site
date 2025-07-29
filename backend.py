@@ -9,7 +9,6 @@ from scripts.init_db import (
 )
 from scripts.api import pendingUpdates
 # init databases BEFORE DOING ANYTHING
-init_pixel_db()
 init_db()
 init_userinfo_db()
 init_userdrawings_db()
@@ -68,6 +67,25 @@ Talisman(
     x_xss_protection=False,
 )
 
+def should_init_pixel_db():
+    try:
+        conn = get_db_connection('pixels.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM pixels")
+        count = cursor.fetchone()[0]
+        return count == 0
+    except Exception as e:
+        print(f"[DB CHECK ERROR] {e}")
+        return False  # Don't initialize if unsure
+    finally:
+        conn.close()
+
+if should_init_pixel_db():
+    print("[Init] Pixel DB is empty, initializing...")
+    init_pixel_db()
+else:
+    print("[Init] Pixel DB already has data, skipping init_pixel_db()")
+    
 def flush_pending_updates():
     global _thread_running
     _thread_running = True
