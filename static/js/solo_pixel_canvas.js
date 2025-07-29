@@ -32,6 +32,25 @@ for (let i = 0; i < CELL_SIDE_COUNT; i++) {
     }
 }
 
+function getCanvasCoordinates(e) {
+    const canvasBoundingRect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / canvasBoundingRect.width;
+    const scaleY = canvas.height / canvasBoundingRect.height;
+    
+    const x = (e.clientX - canvasBoundingRect.left) * scaleX;
+    const y = (e.clientY - canvasBoundingRect.top) * scaleY;
+    
+    return { x, y };
+}
+
+function getCellCoordinates(e) {
+    const { x, y } = getCanvasCoordinates(e);
+    const cellX = Math.floor(x / cellPixelLength);
+    const cellY = Math.floor(y / cellPixelLength);
+    
+    return { cellX, cellY };
+}
+
 function fillCell(cellX, cellY) {
     const startX = cellX * cellPixelLength;
     const startY = cellY * cellPixelLength;
@@ -71,7 +90,7 @@ function loadCanvasState() {
     }
 }
 
-// Setup the guide
+// Setup the guide - FIXED VERSION
 {
     guide.style.width = `${canvas.width}px`;
     guide.style.height = `${canvas.height}px`;
@@ -81,17 +100,29 @@ function loadCanvasState() {
     [...Array(CELL_SIDE_COUNT ** 2)].forEach(() => guide.insertAdjacentHTML("beforeend", "<div></div>"));
 }
 
+// Prevent dragging and text selection
+canvas.addEventListener('dragstart', (e) => {
+    e.preventDefault();
+    return false;
+});
+
+canvas.addEventListener('selectstart', (e) => {
+    e.preventDefault();
+    return false;
+});
+
+guide.addEventListener('dragstart', (e) => {
+    e.preventDefault();
+    return false;
+});
+
 function handleCanvasMousedown(e) {
     // Ensure user is using primary mouse button.
     if (e.button !== 0) {
         return;
     }
 
-    const canvasBoundingRect = canvas.getBoundingClientRect();
-    const x = e.clientX - canvasBoundingRect.left;
-    const y = e.clientY - canvasBoundingRect.top;
-    const cellX = Math.floor(x / cellPixelLength);
-    const cellY = Math.floor(y / cellPixelLength);
+    const { cellX, cellY } = getCellCoordinates(e);
 
     if (cellX < 0 || cellY < 0 || cellX >= CELL_SIDE_COUNT || cellY >= CELL_SIDE_COUNT) {
         return;
@@ -107,7 +138,7 @@ function handleCanvasMousedown(e) {
         fillCell(cellX, cellY);
     }
 
-    console.log(x, y);
+    console.log(`Cell: (${cellX}, ${cellY})`);
 }
 
 function handleToggleGuideChange() {
@@ -123,7 +154,7 @@ function redrawCanvasFromHistory() {
         for (let j = 0; j < CELL_SIDE_COUNT; j++) {
             const key = `${i}_${j}`;
             const colour = colourHistory[key];
-            if (colour) {
+            if (colour && colour !== "#ffffff") {
                 const startX = i * cellPixelLength;
                 const startY = j * cellPixelLength;
                 drawingContext.fillStyle = colour;
@@ -133,17 +164,8 @@ function redrawCanvasFromHistory() {
     }
 }
 
-canvas.addEventListener("mousedown", (e) => {
-    isDrawing = true;
-    handleCanvasMousedown(e);
-});
-
-canvas.addEventListener("mousemove", (e) => {
-    const canvasBoundingRect = canvas.getBoundingClientRect();
-    const x = e.clientX - canvasBoundingRect.left;
-    const y = e.clientY - canvasBoundingRect.top;
-    const cellX = Math.floor(x / cellPixelLength);
-    const cellY = Math.floor(y / cellPixelLength);
+function handleCanvasMousemove(e) {
+    const { cellX, cellY } = getCellCoordinates(e);
 
     // If mouse is outside canvas, reset lastHoveredCell and redraw if needed
     if (cellX < 0 || cellY < 0 || cellX >= CELL_SIDE_COUNT || cellY >= CELL_SIDE_COUNT) {
@@ -171,7 +193,14 @@ canvas.addEventListener("mousemove", (e) => {
     if (isDrawing) {
         handleCanvasMousedown(e);
     }
+}
+
+canvas.addEventListener("mousedown", (e) => {
+    isDrawing = true;
+    handleCanvasMousedown(e);
 });
+
+canvas.addEventListener("mousemove", handleCanvasMousemove);
 
 canvas.addEventListener("mouseup", () => {
     isDrawing = false;
@@ -203,8 +232,7 @@ function attachButtonListener(button, eventType, callback) {
 
 const clearCanvasButton = document.getElementById("clearCanvasBtn");
 const saveCanvasButton = document.getElementById("saveCanvasBtn");
-const loadCanvasButton = document.getElementById("loadCanvasBtn"); // This seems to be a general load button, not specific to recent drawings
-
+const loadCanvasButton = document.getElementById("loadCanvasBtn"); 
 
 attachButtonListener(clearCanvasButton, "click", clearCanvas);
 attachButtonListener(saveCanvasButton, "click", saveCanvasData);
@@ -406,6 +434,12 @@ async function renderDrawingOnMiniCanvas(drawing, container) {
     container.appendChild(canvasContainer);
 }
 
+// Add window resize handler for proper canvas rescaling
+window.addEventListener('resize', () => {
+    setTimeout(() => {
+        redrawCanvasFromHistory();
+    }, 100);
+});
 
 // Initial load from saved canvas state in localStorage
 loadCanvasState();

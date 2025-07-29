@@ -1,8 +1,8 @@
-/* Main canvas wrapper */
+/* Main canvas wrapper - responsive */
 #canvasWrapper {
     box-sizing: border-box;
-    width: calc(750px + 2 * 10px + 2 * 4px);
-    height: calc(750px + 2 * 10px + 2 * 4px);
+    width: min(90vw, 780px); /* 90% of viewport width, max 780px */
+    height: min(90vw, 780px); /* Keep it square */
     padding: 10px;
     border: 4px solid #E1F5FE;
     background-color: white;
@@ -15,21 +15,47 @@
     align-items: center;
 }
 
-/* Canvas container */
+/* Canvas container - responsive */
 #canvasContainer {
     position: relative;
     display: block;
     overflow: hidden;
     box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.05);
     background-color: #E1F5FE;
-    width: 750px;
-    height: 750px;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1; /* Keep it square */
 }
 
 #canvas {
     display: block;
     width: 100%;
     height: 100%;
+    
+    /* Prevent dragging */
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    
+    /* Prevent text selection */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    
+    /* Prevent context menu on long press (mobile) */
+    -webkit-touch-callout: none;
+    
+    /* Additional drag prevention */
+    pointer-events: auto;
+    touch-action: none;
+    
+    /* Smooth scaling */
+    image-rendering: pixelated; /* Keep pixel art crisp */
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
 }
 
 /* Canvas grid guide */
@@ -41,10 +67,34 @@
     height: 100%;
     top: 0;
     left: 0;
+    grid-template-columns: repeat(50, 1fr);
+    grid-template-rows: repeat(50, 1fr);
+    
+    /* Prevent dragging on guide as well */
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    
+    -webkit-touch-callout: none;
 }
 
 #guide div {
     border: 1px solid rgba(0, 0, 0, 0.1);
+    
+    /* Prevent dragging on guide cells */
+    -webkit-user-drag: none;
+    -moz-user-drag: none;
+    user-drag: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
 }
 
 /* Tooltip styling */
@@ -77,7 +127,7 @@
     background-color: #d28e3c;
 }
 
-/* Control panel */
+/* Control panel - responsive */
 .control-panel {
     display: flex;
     align-items: center;
@@ -89,7 +139,7 @@
     background-color: #E1F5FE;
     border-radius: 12px;
     box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    max-width: 1400px;
+    max-width: min(90vw, 1400px);
 }
 
 /* Canvas action buttons (Clear, Save, Load) */
@@ -155,6 +205,8 @@
     display: flex;
     gap: 0.5rem;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Multiplayer link styling */
@@ -190,18 +242,18 @@ main h3 {
     gap: 20px;
     justify-items: center;
     margin: 20px auto;
-    max-width: 1000px;
+    max-width: min(90vw, 1000px);
     padding: 0 20px;
 }
 
 /* All older drawings grid */
 #allOlderDrawings {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 20px;
     justify-items: center;
     margin: 20px auto;
-    max-width: 1000px;
+    max-width: min(90vw, 1000px);
     padding: 0 20px;
 }
 
@@ -247,27 +299,58 @@ main h3 {
     margin: 0 0 8px;
 }
 
-/* Mobile responsiveness */
+/* Mobile and tablet responsiveness */
 @media screen and (max-width: 768px) {
     #canvasWrapper {
-        width: calc(100vw - 40px);
-        height: calc(100vw - 40px);
-        max-width: calc(750px + 2 * 10px + 2 * 4px);
-        max-height: calc(750px + 2 * 10px + 2 * 4px);
-    }
-    
-    #canvasContainer {
-        width: 100%;
-        height: 100%;
+        width: min(95vw, 500px);
+        height: min(95vw, 500px);
+        padding: 8px;
     }
     
     .control-panel {
         flex-direction: column;
         align-items: center;
+        width: min(95vw, 500px);
+        margin: 1rem auto;
     }
     
-    #recentDrawings,
-    #allOlderDrawings {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    .preset-colours {
+        gap: 0.3rem;
+    }
+    
+    .colour-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+    
+    #colourInput {
+        width: 60px;
+        height: 40px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    #canvasWrapper {
+        width: min(98vw, 350px);
+        height: min(98vw, 350px);
+        padding: 5px;
+    }
+    
+    .control-panel {
+        width: min(98vw, 350px);
+        padding: 8px;
+    }
+    
+    .colour-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+}
+
+/* Very large screens */
+@media screen and (min-width: 1200px) {
+    #canvasWrapper {
+        width: min(60vw, 800px);
+        height: min(60vw, 800px);
     }
 }
