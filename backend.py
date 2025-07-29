@@ -7,6 +7,8 @@ from scripts.init_db import (
     init_userdrawings_db,
     init_bannedips_db,
 )
+
+from scripts.api import pendingUpdates
 # init databases BEFORE DOING ANYTHING
 init_pixel_db()
 init_db()
@@ -65,13 +67,13 @@ Talisman(
 )
 
 def flush_pending_updates():
-    global pendingUpdates
     while True:
         time.sleep(SAVE_INTERVAL)
         print(f"[Flush Thread] Attempting to save {len(pendingUpdates)} pixels")
         if pendingUpdates:
-            update_pixel_db(pendingUpdates)
-            pendingUpdates = []
+            pixels_to_save = pendingUpdates.copy()
+            pendingUpdates.clear()
+            update_pixel_db(pixels_to_save)
             print("[Flush Thread] Updated Database... (pixels.db)")
         else:
             print("[Flush Thread] No updates to flush")
