@@ -7,7 +7,6 @@ from scripts.init_db import (
     init_userdrawings_db,
     init_bannedips_db,
 )
-
 from scripts.api import pendingUpdates
 # init databases BEFORE DOING ANYTHING
 init_pixel_db()
@@ -34,12 +33,16 @@ from scripts.api import api_bp, pendingUpdates, get_db_connection
 # Boyfriend stuff :3
 from config import FREEVIEW_PAGE, FREEVIEW_URL_PREFIX
 
+# Thread management variables
+_flush_thread = None
+_flush_lock = Lock()
+_thread_running = False
+
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 app.register_blueprint(database_bp)
 app.register_blueprint(routes_bp)
 app.register_blueprint(api_bp, url_prefix='/api')
-
 csp = {
     'default-src': ["'self'"],
     'script-src': ["'self'"],
@@ -47,7 +50,6 @@ csp = {
     'img-src': ["'self'", "data:"],
     'connect-src': ["'self'"],
 }
-
 Talisman(
     app,
     content_security_policy=csp,
@@ -67,19 +69,37 @@ Talisman(
 )
 
 def flush_pending_updates():
-    while True:
-        time.sleep(SAVE_INTERVAL)
-        print(f"[Flush Thread] Attempting to save {len(pendingUpdates)} pixels")
-        if pendingUpdates:
-            pixels_to_save = pendingUpdates.copy()
-            pendingUpdates.clear()
+    global _thread_running
+    _thread_running = True
+
+    while _thread_running:
+        try:
+            time.sleep(SAVE_INTERVAL)
+
+            with _flush_lock:
+                print(f"[Flush Thread] Attempting to save {len(pendingUpdates)} pixels")
+
+                if pendingUpdates:
+                    pixels_to_save = pendingUpdates.copy()
+                    pendingUpdates.clear()
+                else:
+                    print("[Flush Thread] No updates to flush")
+                    continue
+
             update_pixel_db(pixels_to_save)
             print("[Flush Thread] Updated Database... (pixels.db)")
-        else:
-            print("[Flush Thread] No updates to flush")
+
+        except Exception as e:
+            print(f"[Flush Thread ERROR] {e}")
+            time.sleep(5)
 
 # DB update function
 def update_pixel_db(pixelArray):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(base_dir)
+    db_path = os.path.join(project_root, 'databases', 'pixels.db')
+    print(f"[DB] Updating database at: {db_path}")
+    
     conn = get_db_connection('pixels.db')
     cursor = conn.cursor()
     try:
@@ -98,16 +118,26 @@ def update_pixel_db(pixelArray):
         conn.commit()
     except Exception as e:
         print(f"[DB ERROR] {e}")
+        conn.rollback()
     finally:
         conn.close()
 
 def init_flush_thread():
-    print("[Startup] Starting background flush thread...")
-    flush_thread = Thread(target=flush_pending_updates, daemon=True)
-    flush_thread.start()
-    print("[Startup] Background flush thread started successfully!")
+    global _flush_thread, _thread_running
+    
+    with _flush_lock:
+        if _flush_thread is not None and _flush_thread.is_alive():
+            print("[Startup] Flush thread already running, skipping initialization")
+            return
+        
+        print("[Startup] Starting background flush thread...")
+        _thread_running = False
+        time.sleep(0.1)
+        
+        _flush_thread = Thread(target=flush_pending_updates, daemon=True)
+        _flush_thread.start()
+        print("[Startup] Background flush thread started successfully!")
 
 init_flush_thread()
-
 if __name__ == '__main__':
     app.run(debug=True)
