@@ -30,47 +30,47 @@ from dotenv import load_dotenv
 from flask_talisman import Talisman
 import requests
 
-
 from config import SAVE_INTERVAL, SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD
-
 from scripts.routes import routes_bp
 from scripts.api import api_bp, pendingUpdates, get_db_connection
 
-#boyfriend stuff :3
+# Boyfriend stuff :3
 from config import FREEVIEW_PAGE, FREEVIEW_URL_PREFIX
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
+
 app.register_blueprint(database_bp)
-
-
-
 app.register_blueprint(routes_bp)
 app.register_blueprint(api_bp, url_prefix='/api')
 
 
-
-#csrf = CSRFProtect(app)
 csp = {
     'default-src': ["'self'"],
     'script-src': ["'self'"], 
-    'style-src': ["'self'", "'unsafe-inline'"], 
+    'style-src': ["'self'", "'unsafe-inline'"],  
     'img-src': ["'self'", "data:"],
     'connect-src': ["'self'"],
 }
 
-# Initialize Talisman with headers
-Talisman(app,
-            content_security_policy=csp,
-            content_security_policy_nonce_in=['script'],
-            referrer_policy='strict-origin-when-cross-origin',
-            permissions_policy={
-                "geolocation": [],
-                "camera": [],
-                "microphone": [],
-            })
-
+Talisman(
+    app,
+    content_security_policy=csp,
+    content_security_policy_nonce_in=['script'],
+    referrer_policy='strict-origin-when-cross-origin',
+    permissions_policy={
+        "geolocation": [],
+        "camera": [],
+        "microphone": [],
+    },
+    force_https=True,
+    strict_transport_security=True,
+    strict_transport_security_preload=True,
+    strict_transport_security_include_subdomains=True,
+    frame_options=None,
+    x_xss_protection=False, 
+)
 
 def flush_pending_updates():
     global pendingUpdates
@@ -84,8 +84,9 @@ def flush_pending_updates():
         else:
             print("[Flush Thread] No updates to flush")
 
-
 Thread(target=flush_pending_updates, daemon=True).start()
+
+# DB update function
 def update_pixel_db(pixelArray):
     conn = get_db_connection('pixels.db')
     cursor = conn.cursor()
