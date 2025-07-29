@@ -284,8 +284,6 @@ async function saveCanvasData() {
         const { userid, username } = sessionData;
 
         const dataToSend = {
-            user_id: userid,
-            username: username,
             piece_name: pieceName,
             content: json,
             private: isPrivate,
