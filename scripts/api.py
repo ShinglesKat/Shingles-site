@@ -141,7 +141,8 @@ def handle_messages() -> jsonify:
     print("Request data:", request.form)
     conn = get_db_connection()
     cursor = conn.cursor()
-
+    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)  # Get IP address
+    
     username = request.form.get('username', '').strip()
     content = request.form.get('content', '').strip()
     if ban_response := handle_ban_check(
