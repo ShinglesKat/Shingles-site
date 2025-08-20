@@ -15,10 +15,6 @@ const cellPixelLength = canvas.width / CELL_SIDE_COUNT;
 const colourHistory = {};
 const ipHistory = {};
 
-let isBanned = false;
-let banExpiresAt = null;
-let banReason = null;
-
 let lastHoveredCell = { x: -1, y: -1 }; // To keep track of the previously hovered cell
 
 //Set default colour
@@ -76,59 +72,31 @@ fetch("/api/canvas")
     });
 
 document.addEventListener("DOMContentLoaded", () => {
-    checkIfBanned();
+    // Initial ban check removed - now handled server-side per request
 });
 
+// Periodic ban status check - this will show popup if user gets banned during session
 setInterval(() => {
     fetch('/api/check_ban_status')
     .then(res => res.json())
     .then(data => {
         if (data.banned) {
-        alert('You have been banned! The page will refresh.');
-        window.location.reload();
+            let banMessage = "You have been banned from drawing on the canvas.";
+            if (data.reason) {
+                banMessage += `\nReason: ${data.reason}`;
+            }
+            if (data.expires_at) {
+                const expiryDate = new Date(data.expires_at);
+                banMessage += `\nThis ban expires on: ${expiryDate.toLocaleString()}`;
+            }
+            alert(banMessage);
+            window.location.reload();
         }
+    })
+    .catch(err => {
+        console.error("Error checking ban status:", err);
     });
 }, 5000);
-
-function checkIfBanned(){
-    fetch("/api/check_ban_status")
-        .then(res => {
-            if(!res.ok){
-                return res.text().then(text => { throw new Error("Failed to check if banned! Server response: " + text); });
-            }
-            return res.json();
-        })
-        .then(data => {
-            if(data.banned){
-                isBanned = true;
-                banExpiresAt = data.expires_at;
-                banReason = data.reason;
-
-                colourInput.disabled = true;
-                document.querySelectorAll(".colour-btn").forEach(btn => btn.disabled = true);
-
-                let banMessage = "You are banned from drawing on the canvas.";
-                if (banReason) {
-                    banMessage += `\nReason: ${banReason}`;
-                }
-                if (banExpiresAt) {
-                    const expiryDate = new Date(banExpiresAt);
-                    banMessage += `\nThis ban expires on: ${expiryDate.toLocaleString()}`;
-                }
-                alert(banMessage);
-            } else {
-                isBanned = false;
-                banExpiresAt = null;
-                banReason = null;
-                colourInput.disabled = false;
-                document.querySelectorAll(".colour-btn").forEach(btn => btn.disabled = false);
-            }
-        })
-        .catch(err =>{
-            console.error("Error checking ban status.", err);
-            console.log("Could not confirm ban status due to a network error. You might be able to draw, but it's recommended to refresh.");
-        });
-}
 
 document.querySelectorAll(".colour-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -181,11 +149,6 @@ canvas.addEventListener("contextmenu", (e) => {
 
 function handleCanvasMousedown(e) {
     //Ensure user is using primary mouse button.
-    if(isBanned){
-        alert("You are banned from drawing.");
-        return;
-    }
-
     if (e.button !== 0) {
         return;
     }
@@ -217,6 +180,7 @@ function fillCell(cellX, cellY) {
     const startX = cellX * cellPixelLength;
     const startY = cellY * cellPixelLength;
 
+    // Optimistically update the canvas
     drawingContext.fillStyle = colourInput.value;
     drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
     colourHistory[`${cellX}_${cellY}`] = colourInput.value;
@@ -225,6 +189,36 @@ function fillCell(cellX, cellY) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ x: cellX, y: cellY, colour: colourInput.value }),
+    })
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(errorData => {
+                throw new Error(errorData.error || `Failed to update canvas cell. Status: ${res.status}`);
+            });
+        }
+        return res.json();
+    })
+    .then(data => {
+        // Success - pixel was updated
+        console.log("Pixel updated successfully");
+    })
+    .catch(err => {
+        console.error("Error updating cell:", err);
+        
+        // Check if this is a ban-related error
+        if (err.message.includes("banned") || err.message.includes("Ban")) {
+            // Revert the optimistic update
+            const originalColour = "#ffffff"; // Default or fetch from server
+            drawingContext.fillStyle = originalColour;
+            drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
+            colourHistory[`${cellX}_${cellY}`] = originalColour;
+            
+            // Show ban message
+            alert(err.message);
+        } else {
+            // For other errors, also revert the change
+            refreshCanvasFromServer();
+        }
     });
 }
 

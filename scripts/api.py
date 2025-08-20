@@ -15,7 +15,59 @@ DEFAULT_COLOUR = "#ffffff"
 saveInterval = 300
 pendingUpdates = []
 pixelArray = []
-    
+
+def get_user_ip():
+    if request.environ.get('HTTP_X_FORWARDED_FOR'):
+        return request.environ['HTTP_X_FORWARDED_FOR'].split(',')[0].strip()
+    elif request.environ.get('HTTP_X_REAL_IP'):
+        return request.environ.get('HTTP_X_REAL_IP')
+    else:
+        return request.environ.get('REMOTE_ADDR', 'unknown')
+
+def check_if_banned(ip_address):
+    try:
+        conn = get_db_connection('bannedips.db')
+        cursor = conn.cursor()
+        current_time = datetime.now(timezone.utc)
+        current_iso = current_time.isoformat()
+        cursor.execute("""
+            SELECT reason, ban_expires_at, ban_duration 
+            FROM bannedIPs 
+            WHERE ip = ? AND ban_expires_at > ?
+        """, (ip_address, current_iso))
+        ban_record = cursor.fetchone()
+        if ban_record:
+            reason, expires_at, duration = ban_record
+            return True, {
+                'banned': True,
+                'reason': reason,
+                'expires_at': expires_at,
+                'ban_duration': duration
+            }
+        else:
+            return False, None
+    except Exception as e:
+        print(f"[BAN CHECK ERROR] {e}")
+        return False, None
+    finally:
+        conn.close()
+
+def handle_ban_check(custom_message):
+    user_ip = get_user_ip()
+    is_banned, ban_info = check_if_banned(user_ip)
+    if is_banned:
+        error_message = custom_message
+        if ban_info.get('reason'):
+            error_message += f" Reason: {ban_info['reason']}"
+        if ban_info.get('expires_at'):
+            try:
+                expires_dt = datetime.fromisoformat(ban_info['expires_at'].replace('Z', '+00:00'))
+                error_message += f" Ban expires: {expires_dt.strftime('%Y-%m-%d %H:%M:%S UTC')}"
+            except Exception:
+                error_message += f" Ban expires: {ban_info['expires_at']}"
+        return jsonify({'error': error_message}), 403
+    return None
+
 def get_db_connection(db_name='database.db'):
     base_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(base_dir)
@@ -85,7 +137,6 @@ def get_messages():
     return jsonify(messages_list)
 
 @api_bp.route('/post_message', methods=['POST'])
-
 def handle_messages() -> jsonify:
     print("Request data:", request.form)
     conn = get_db_connection()
@@ -93,7 +144,10 @@ def handle_messages() -> jsonify:
 
     username = request.form.get('username', '').strip()
     content = request.form.get('content', '').strip()
-    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr)  # Get IP address
+    if ban_response := handle_ban_check(
+        "You are banned from posting messages!"
+    ):
+        return ban_response
 
     if not (1 < len(username) < 17):
         return jsonify({"error": "Username must be between 2 and 16 characters."}), 400
@@ -148,9 +202,14 @@ def clear_canvas():
 
 @api_bp.route('/save_drawing', methods=['POST'])
 def upload_pixel_canvas():
+    if ban_response := handle_ban_check(
+        "You are banned from uploading images!"
+    ):
+        return ban_response
+    
     if 'userid' not in session or 'username' not in session:
         return jsonify({"error": "You must be logged in to save drawings."}), 401
-
+    
     user_id = session['userid']
     username = session['username']
 
@@ -354,23 +413,26 @@ def update_user():
 
 @api_bp.route('/canvas/update', methods=['POST'])
 def update_pixel():
-    data = request.get_json()
-    x = data.get('x')
-    y = data.get('y')
-    colour = data.get('colour')
-    ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-
-    if None in (x, y, colour):
-        return jsonify({"error": "Missing data fields"}), 400
-    if not (0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT):
-        return jsonify({"error": "Coordinates out of bounds"}), 400
-
-    global pixelArray
-    pixelArray[y][x] = {'colour': colour, 'ip_address': ip_address}
-    print(f"[DEBUG] Parsed update: ({x}, {y}) -> {colour} from {ip_address}")
-    pendingUpdates.append({'x': x, 'y': y, 'colour': colour, 'ip_address': ip_address})
-
-    return jsonify({"status": "Pixel updated successfully"})
+    try:
+        if ban_response := handle_ban_check(
+            "You are banned from drawing on the canvas."
+        ):
+            return ban_response
+        data = request.get_json()
+        x = data.get('x')
+        y = data.get('y')
+        colour = data.get('colour')
+        if None in (x, y, colour):
+            return jsonify({'error': 'Missing data fields'}), 400
+        if not (0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT):
+            return jsonify({'error': 'Coordinates out of bounds'}), 400
+        global pixelArray
+        pixelArray[y][x] = {'colour': colour, 'ip_address': get_user_ip()}
+        pendingUpdates.append({'x': x, 'y': y, 'colour': colour, 'ip_address': get_user_ip()})
+        return jsonify({'status': 'Pixel updated successfully'}), 200
+    except Exception as e:
+        print(f"[CANVAS UPDATE ERROR] {e}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @api_bp.route('/canvas', methods=['GET'])
 def get_pixel_array():
@@ -379,7 +441,7 @@ def get_pixel_array():
 @api_bp.route('/ban_ip', methods=['POST'])
 def ban_ip():
     if session.get('accounttype') != 'admin':
-        return jsonify({"error": "Access denied"}), 403
+        return jsonify({'error': 'Access denied'}), 403
 
     data = request.get_json()
     ip_string = data.get('ip')
@@ -387,15 +449,14 @@ def ban_ip():
     ban_duration = data.get('ban_duration')
 
     if not ip_string or not reason or not ban_duration:
-        return jsonify({"error": "Missing IP, reason, or ban duration"}), 400
+        return jsonify({'error': 'Missing IP, reason, or ban duration'}), 400
 
     try:
         duration_delta = parse_duration(ban_duration)
         expires_at = datetime.now(timezone.utc) + duration_delta
     except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({'error': str(e)}), 400
 
-    # Split comma-separated IPs and sanitize
     ips = [ip.strip() for ip in ip_string.split(',') if ip.strip()]
 
     conn = get_db_connection('bannedips.db')
@@ -415,52 +476,22 @@ def ban_ip():
                     (ip, reason, ban_duration, expires_at.isoformat())
                 )
         conn.commit()
-        return jsonify({"status": f"Banned {len(ips)} IP(s). Expires: {expires_at.isoformat()}"}), 200
+        return jsonify({'status': f'Banned {len(ips)} IP(s). Expires: {expires_at.isoformat()}'}), 200
 
     except sqlite3.Error as e:
         conn.rollback()
-        return jsonify({"error": f"Database operation failed: {str(e)}"}), 500
+        return jsonify({'error': f'Database operation failed: {str(e)}'}), 500
     finally:
         conn.close()
 
 @api_bp.route('/check_ban_status', methods=['GET'])
 def check_ban_status():
-    user_ip = request.headers.get('X-Forwarded-For', request.remote_addr).split(',')[0].strip()
-
-    conn = get_db_connection('bannedips.db')
-    cursor = conn.cursor()
-
-    now_utc = datetime.now(timezone.utc)
-    now_iso = now_utc.isoformat()
-
     try:
-        cursor.execute(
-            "SELECT ban_expires_at, reason FROM bannedIPs WHERE ip = ? AND ban_expires_at > ?",
-            (user_ip, now_iso)
-        )
-        if result := cursor.fetchone():
-            return jsonify({
-                "banned": True,
-                "expires_at": result['ban_expires_at'],
-                "reason": result['reason']
-            }), 200
-        # Check for expired ban to clean up
-        cursor.execute(
-            "SELECT ip FROM bannedIPs WHERE ip = ? AND ban_expires_at <= ?",
-            (user_ip, now_iso)
-        )
-        if cursor.fetchone():
-            try:
-                cursor.execute("DELETE FROM bannedIPs WHERE ip = ?", (user_ip,))
-                conn.commit()
-                print(f"Cleaned up expired ban for IP: {user_ip}")
-            except sqlite3.Error as e:
-                conn.rollback()
-                print(f"Error deleting expired ban for IP {user_ip}: {e}")
-
-        return jsonify({"banned": False}), 200
-    finally:
-        conn.close()
+        ban_response = handle_ban_check("You are banned from using this service.")
+        return ban_response or (jsonify({'banned': False}), 200)
+    except Exception as e:
+        print(f"[BAN STATUS CHECK ERROR] {e}")
+        return jsonify({'error': 'Could not check ban status'}), 500
 
 @api_bp.route('/register_account', methods=['POST'])
 def register_account():

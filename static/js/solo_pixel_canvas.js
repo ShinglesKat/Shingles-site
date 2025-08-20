@@ -90,10 +90,7 @@ function loadCanvasState() {
     }
 }
 
-// Setup the guide - FIXED VERSION
 {
-    guide.style.width = `${canvas.width}px`;
-    guide.style.height = `${canvas.height}px`;
     guide.style.gridTemplateColumns = `repeat(${CELL_SIDE_COUNT}, 1fr)`;
     guide.style.gridTemplateRows = `repeat(${CELL_SIDE_COUNT}, 1fr)`;
 
@@ -291,51 +288,62 @@ let currentPieceId = null;
 
 async function saveCanvasData() {
     if (!drawnCells || drawnCells.length === 0) {
-        alert("cmon bruh at least try draw something");
+        alert("C'mon bruh, at least draw something.");
         return;
     }
 
     try {
-        const response = await fetch('/api/get_session_data');
-        if (!response.ok) {
+        // Check session first
+        const sessionResponse = await fetch('/api/get_session_data');
+        if (!sessionResponse.ok) {
             throw new Error("You must be logged in to do that!");
         }
 
+        const sessionData = await sessionResponse.json();
+        const { userid, username } = sessionData;
+
+        // Show modal to get piece name and privacy setting
         const result = await showNameModal();
         if (!result) {
             return;
         }
 
         const { pieceName, isPrivate } = result;
-        const json = JSON.stringify(drawnCells);
-        const sessionData = await response.json();
-        const { userid, username } = sessionData;
 
         const dataToSend = {
             piece_name: pieceName,
-            content: json,
+            content: JSON.stringify(drawnCells),
             private: isPrivate,
             piece_id: currentPieceId
         };
 
+        // Save the drawing
         const saveResponse = await fetch('/api/save_drawing', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dataToSend)
         });
 
+        // Handle API error responses
         if (!saveResponse.ok) {
-            throw new Error("Failed to save drawing");
+            const errorData = await saveResponse.json();
+            throw new Error(errorData.error || "Failed to save drawing");
         }
 
         const saveResult = await saveResponse.json();
 
+        // Update current piece ID after successful save
         if (saveResult && saveResult.id) {
             currentPieceId = saveResult.id;
-            alert("Drawing saved!");
+            alert("Drawing saved successfully!");
         }
     } catch (err) {
-        alert(err.message);
+        if (err.message.includes("banned") || err.message.includes("Ban")) {
+            alert(err.message);
+            console.warn("User is banned. Local changes not saved.");
+        } else {
+            alert(err.message);
+        }
     }
 }
 

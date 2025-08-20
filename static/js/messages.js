@@ -5,22 +5,6 @@ async function add_message(event) {
     const content = document.getElementById('messageInput').value;
 
     try {
-        const banStatus = await fetch("/api/check_ban_status");
-        const banData = await banStatus.json();
-
-        if (banData.banned) {
-            let banMessage = "You are banned from posting messages.";
-            if (banData.reason) {
-                banMessage += `\nReason: ${banData.reason}`;
-            }
-            if (banData.expires_at) {
-                const expiry = new Date(banData.expires_at).toLocaleString();
-                banMessage += `\nBan expires: ${expiry}`;
-            }
-            alert(banMessage);
-            return;
-        }
-
         const response = await fetch("/api/post_message", {
             method: "POST",
             headers: {
@@ -30,7 +14,14 @@ async function add_message(event) {
         });
 
         if (!response.ok) {
-            throw new Error(`Status: ${response.status}`);
+            const errorData = await response.json();
+            
+            if (response.status === 403 && errorData.error && errorData.error.includes("banned")) {
+                alert(errorData.error);
+                return;
+            } else {
+                throw new Error(errorData.error || `Status: ${response.status}`);
+            }
         }
 
         await response.json();
@@ -53,9 +44,20 @@ setInterval(() => {
     .then(res => res.json())
     .then(data => {
         if (data.banned) {
-        alert('You have been banned! The page will refresh.');
-        window.location.reload();
+            let banMessage = "You have been banned from posting messages.";
+            if (data.reason) {
+                banMessage += `\nReason: ${data.reason}`;
+            }
+            if (data.expires_at) {
+                const expiryDate = new Date(data.expires_at);
+                banMessage += `\nThis ban expires on: ${expiryDate.toLocaleString()}`;
+            }
+            alert(banMessage);
+            window.location.reload();
         }
+    })
+    .catch(err => {
+        console.error("Error checking ban status:", err);
     });
 }, 5000);
 
