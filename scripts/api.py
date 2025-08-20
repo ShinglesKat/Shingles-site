@@ -6,6 +6,7 @@ import time
 from datetime import datetime, timezone, timedelta
 from flask import Blueprint, request, jsonify, session, redirect, url_for
 from threading import Thread
+from werkzeug.security import generate_password_hash, check_password_hash
 from config import ADMIN_USERNAME, ADMIN_PASSWORD, SAVE_INTERVAL
 
 api_bp = Blueprint('api_bp', __name__)
@@ -498,11 +499,14 @@ def check_ban_status():
 def register_account():
     data = request.get_json()
     username = data.get('username', '').strip()
-    password_hash = data.get('password')  # Assume password is already hashed client-side
-    if not username or not password_hash:
+    password = data.get('password', '').strip()  # raw password
+
+    if not username or not password:
         return jsonify({"error": "Username and password required"}), 400
     if len(username) < 2 or len(username) > 16:
         return jsonify({"error": "Username must be between 2 and 16 characters"}), 400
+
+    password_hash = generate_password_hash(password)  # hash server-side
 
     conn = get_db_connection('userinfo.db')
     cursor = conn.cursor()
@@ -512,7 +516,10 @@ def register_account():
         return jsonify({"error": "Username already exists"}), 400
 
     try:
-        cursor.execute("INSERT INTO userinfo (username, password, userType, creationsIDs) VALUES (?, ?, 'user', '[]')", (username, password_hash))
+        cursor.execute(
+            "INSERT INTO userinfo (username, password, userType, creationsIDs) VALUES (?, ?, 'user', '[]')",
+            (username, password_hash)
+        )
         conn.commit()
         return jsonify({"status": "Account registered successfully"})
     except sqlite3.Error as e:
@@ -520,31 +527,62 @@ def register_account():
     finally:
         conn.close()
 
+from flask import request, jsonify, redirect, session, url_for
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
+import hashlib
+import os
+
 @api_bp.route('/login', methods=['POST'])
 def attempt_login():
-    password = request.form.get('password', '').strip()
     username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()  # raw password from client
 
+    # Check for admin login
     if username == os.getenv('ADMIN_USERNAME') and password == os.getenv('ADMIN_PASSWORD'):
         session['admin'] = True
         session['username'] = username
         session['accounttype'] = 'admin'
         return redirect(url_for('routes_bp.home'))
 
+    # Connect to database
     conn = get_db_connection('userinfo.db')
     cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM userinfo WHERE username = ? AND password = ?", (username, password))
+    cursor.execute("SELECT * FROM userinfo WHERE username = ?", (username,))
     user = cursor.fetchone()
+
+    if not user:
+        conn.close()
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    stored_hash = user['password']
+    is_old_sha256 = len(stored_hash) == 64 and all(c in '0123456789abcdef' for c in stored_hash)
+
+    if is_old_sha256:
+        # Compare SHA-256 of submitted password to stored hash
+        hashed_submit = hashlib.sha256(password.encode()).hexdigest()
+        if hashed_submit == stored_hash:
+            # Successful login: migrate password to secure hash
+            new_hash = generate_password_hash(password)
+            cursor.execute("UPDATE userinfo SET password = ? WHERE id = ?", (new_hash, user['id']))
+            conn.commit()
+            password_valid = True
+        else:
+            password_valid = False
+    else:
+        # Stored hash is a werkzeug hash, verify normally
+        password_valid = check_password_hash(stored_hash, password)
+
     conn.close()
 
-    if user:
+    if password_valid:
         session['username'] = username
         session['accounttype'] = user['userType']
         session['userid'] = user['id']
         return redirect(url_for('routes_bp.home'))
     else:
         return jsonify({"error": "Invalid credentials"}), 401
+
 
 @api_bp.route('/logout', methods=['POST'])
 def logout():
