@@ -46,21 +46,30 @@ def render_user_drawing_page():
     drawing_id = request.args.get('id')
     if not drawing_id:
         return {"error": "No drawing ID provided"}, 400
-
+    
     conn = get_db_connection('userdrawings.db')
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM userdrawings WHERE id = ?", (drawing_id,))
     drawing = cursor.fetchone()
     conn.close()
-
+    
     if not drawing:
         return {"error": "Drawing not found"}, 404
-
+    
+    # Check privacy permissions
+    if drawing['private']:
+        session_username = session.get('username')
+        session_accounttype = session.get('accounttype')
+        
+        # Allow access if user is the owner OR if user is admin
+        if session_username != drawing['username'] and session_accounttype != 'admin':
+            return {"error": "You do not have permission to view this drawing"}, 403
+    
     try:
         drawing_content_json = json.loads(drawing['content'])
     except Exception as e:
         return {"error": f"Failed to parse drawing content: {str(e)}"}, 400
-
+    
     return render_template(
         'user_drawing.html',
         drawing=drawing,

@@ -1,3 +1,4 @@
+from flask import Flask, session, redirect, request, jsonify, render_template, url_for
 from scripts.init_db import (
     database_bp,
     init_database,
@@ -7,12 +8,14 @@ from scripts.init_db import (
     init_userdrawings_db,
     init_bannedips_db,
 )
-from scripts.api import pendingUpdates
+
 # init databases BEFORE DOING ANYTHING
 init_db()
 init_userinfo_db()
 init_userdrawings_db()
 init_bannedips_db()
+init_pixel_db() 
+from scripts.api import pendingUpdates
 from datetime import datetime, timedelta, timezone
 import sqlite3
 from threading import Lock, Thread
@@ -21,7 +24,7 @@ import json
 import os
 import re
 from flask_wtf import CSRFProtect
-from flask import Flask, session, redirect, request, jsonify, render_template, url_for
+
 from markupsafe import escape
 from dotenv import load_dotenv
 from flask_talisman import Talisman
@@ -66,7 +69,6 @@ Talisman(
     frame_options=None,
     x_xss_protection=False,
 )
-
 def should_init_pixel_db():
     try:
         conn = get_db_connection('pixels.db')
@@ -157,5 +159,7 @@ def init_flush_thread():
         print("[Startup] Background flush thread started successfully!")
 
 init_flush_thread()
+
 if __name__ == '__main__':
     app.run(debug=True)
+    

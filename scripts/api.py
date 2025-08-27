@@ -96,15 +96,25 @@ def parse_duration(duration):
     return timedelta(seconds=total_seconds)
 
 def load_pixel_array():
+    global pixelArray
     arr = [[{'colour': DEFAULT_COLOUR, 'ip_address': None} for _ in range(CELL_SIDE_COUNT)] for _ in range(CELL_SIDE_COUNT)]
-    conn = get_db_connection('pixels.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT x, y, colour, ip_address FROM pixels")
-    for x, y, colour, ip_address in cursor.fetchall():
-        if 0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT:
-            arr[y][x] = {'colour': colour, 'ip_address': ip_address}
-    conn.close()
-    return arr
+    
+    try:
+        conn = get_db_connection('pixels.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT x, y, colour, ip_address FROM pixels")
+        for x, y, colour, ip_address in cursor.fetchall():
+            if 0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT:
+                arr[y][x] = {'colour': colour, 'ip_address': ip_address}
+        conn.close()
+        pixelArray = arr
+        print(f"Loaded pixel array with {CELL_SIDE_COUNT}x{CELL_SIDE_COUNT} pixels")
+    except sqlite3.Error as e:
+        print(f"Error loading pixel array: {e}")
+        # Initialize with default values if database isn't ready
+        pixelArray = arr
+    
+    return pixelArray
 
 pixelArray = load_pixel_array()
     
@@ -208,10 +218,10 @@ def upload_pixel_canvas():
         "You are banned from uploading images!"
     ):
         return ban_response
-    
+
     if 'userid' not in session or 'username' not in session:
         return jsonify({"error": "You must be logged in to save drawings."}), 401
-    
+
     user_id = session['userid']
     username = session['username']
 
@@ -245,13 +255,27 @@ def upload_pixel_canvas():
                 WHERE id = ?
             """, (content, private, piece_id))
             drawing_id = piece_id
+
         else:
-            new_piece = True
             cursor.execute("""
-                INSERT INTO userdrawings (user_id, username, piece_name, content, private) 
-                VALUES (?, ?, ?, ?, ?)
-            """, (user_id, username, piece_name, content, private))
-            drawing_id = cursor.lastrowid
+                SELECT id FROM userdrawings 
+                WHERE user_id = ? AND piece_name = ?
+            """, (user_id, piece_name))
+            if existing_piece := cursor.fetchone():
+                # Update the existing piece instead of inserting
+                cursor.execute("""
+                    UPDATE userdrawings
+                    SET content = ?, private = ?, creationTime = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                """, (content, private, existing_piece['id']))
+                drawing_id = existing_piece['id']
+            else:
+                new_piece = True
+                cursor.execute("""
+                    INSERT INTO userdrawings (user_id, username, piece_name, content, private) 
+                    VALUES (?, ?, ?, ?, ?)
+                """, (user_id, username, piece_name, content, private))
+                drawing_id = cursor.lastrowid
 
         conn.commit()
         conn.close()
@@ -284,10 +308,10 @@ def upload_pixel_canvas():
 
 @api_bp.route('/retrieve_drawings', methods=['GET'])
 def retrieve_drawings():
-    limit = request.args.get('limit', type=int)  # No default
+    limit = request.args.get('limit', type=int)
     conn = get_db_connection('userdrawings.db')
     cursor = conn.cursor()
-
+    
     if limit is not None:
         cursor.execute("""
             SELECT * FROM userdrawings
@@ -343,21 +367,30 @@ def delete_drawing(drawing_id):
 
 @api_bp.route('/get_user_drawings/<int:user_id>')
 def get_user_drawings(user_id):
+    logged_in_user_id = session.get('userid')
+    logged_in_user_account_type = session.get('accounttype')
     conn = get_db_connection('userdrawings.db')
     cursor = conn.cursor()
-    drawings = cursor.execute('SELECT * FROM userdrawings WHERE user_id = ?', (user_id,)).fetchall()
+
+    if logged_in_user_id == user_id or logged_in_user_account_type == 'admin':
+        # Logged-in user is the owner
+        cursor.execute('SELECT * FROM userdrawings WHERE user_id = ?', (user_id,))
+    else:
+        # Not the owner
+        cursor.execute('SELECT * FROM userdrawings WHERE user_id = ? AND private = 0', (user_id,))
+
+    drawings = cursor.fetchall()
+    conn.close()
 
     drawings_list = []
     for drawing in drawings:
         drawing_dict = dict(drawing)
         try:
-            # Ensure 'content' is parsed as JSON if it's a JSON string
             drawing_dict['drawing_content_json'] = json.loads(drawing_dict['content'])
         except (ValueError, TypeError):
-            drawing_dict['drawing_content_json'] = [] # Default to empty list if content is not valid JSON or None
+            drawing_dict['drawing_content_json'] = []
         drawings_list.append(drawing_dict)
 
-    conn.close()
     return jsonify(drawings_list)
 
 @api_bp.route('/userinfo')
@@ -539,6 +572,7 @@ def attempt_login():
     password = request.form.get('password', '').strip()  # raw password from client
 
     # Check for admin login
+    print(os.getenv('ADMIN_PASSWORD'))
     if username == os.getenv('ADMIN_USERNAME') and password == os.getenv('ADMIN_PASSWORD'):
         session['admin'] = True
         session['username'] = username
