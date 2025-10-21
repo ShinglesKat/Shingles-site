@@ -44,7 +44,6 @@ function createCanvas(drawing, container) {
 
 window.onload = fetchUserDrawings;
 
-
 function handlePasswordReset() {
     const currentPassword = prompt("Please enter your current password:");
     if (!currentPassword) {
@@ -65,7 +64,6 @@ function handlePasswordReset() {
         alert("Error: New password must be different from the current password.");
         return;
     }
-
     const data = {
         current_password: currentPassword,
         new_password: newPassword
@@ -88,11 +86,19 @@ function handlePasswordReset() {
     })
     .then(data => {
         alert(data.status || "Password successfully reset!");
-        window.location.href = '/logout'; 
+        return fetch('/api/logout', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+    })
+    .then(logoutResponse => {
+        window.location.href = '/'; 
     })
     .catch(error => {
-        console.error('Password Reset Error:', error);
-        alert(`Failed to reset password. ${error.message}`);
+        console.error('Operation Error:', error);
+        alert(`Failed to reset password or log out. ${error.message}`);
     });
 }
 
