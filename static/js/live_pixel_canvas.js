@@ -180,7 +180,6 @@ function fillCell(cellX, cellY) {
     const startX = cellX * cellPixelLength;
     const startY = cellY * cellPixelLength;
 
-    // Optimistically update the canvas
     drawingContext.fillStyle = colourInput.value;
     drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
     colourHistory[`${cellX}_${cellY}`] = colourInput.value;
