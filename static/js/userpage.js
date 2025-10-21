@@ -43,3 +43,62 @@ function createCanvas(drawing, container) {
 }
 
 window.onload = fetchUserDrawings;
+
+
+function handlePasswordReset() {
+    const currentPassword = prompt("Please enter your current password:");
+    if (!currentPassword) {
+        return;
+    }
+
+    const newPassword = prompt("Please enter your new password (min 6 characters):");
+    if (!newPassword) {
+        return;
+    }
+
+    if (newPassword.length < 6) {
+        alert("Error: New password must be at least 6 characters long.");
+        return;
+    }
+
+    if (currentPassword === newPassword) {
+        alert("Error: New password must be different from the current password.");
+        return;
+    }
+
+    const data = {
+        current_password: currentPassword,
+        new_password: newPassword
+    };
+
+    fetch('/api/reset_password', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+                throw new Error(errorData.error || 'Password reset failed due to a server error.');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert(data.status || "Password successfully reset!");
+        window.location.href = '/logout'; 
+    })
+    .catch(error => {
+        console.error('Password Reset Error:', error);
+        alert(`Failed to reset password. ${error.message}`);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const resetPasswordButton = document.getElementById('resetPasswordButton');
+    if (resetPasswordButton) {
+        resetPasswordButton.addEventListener('click', handlePasswordReset);
+    }
+});

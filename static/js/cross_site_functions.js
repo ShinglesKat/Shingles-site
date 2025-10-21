@@ -8,7 +8,6 @@ if (!window.logoutListenerAdded) {
     
     // Use event delegation on document - only needs to run once
     document.addEventListener('click', (event) => {
-    // Check if clicked element is a logout link
     if (event.target.matches('a.logout-link')) {
         event.preventDefault();
         

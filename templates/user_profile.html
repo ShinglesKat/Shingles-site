@@ -8,30 +8,16 @@
 </head>
 
 <body>
-    <header>
-        <h1 style="display:inline;">Shingles's Awesome Website</h1>
-        <hr class="header-separator"/>
-        <nav class="topnav">
-            <ul>
-                <li><a class="active" href="/">Home</a></li>
-                <li><a class="active" href="message">Leave a Message</a></li>
-                <li><a class="active" href="canvas">Pixel Canvas</a></li>
-                <li>
-                {% if session.get('username') %}
-                    <a href="/logout" class="active logout-link">Logout ({{ session['username'] }})</a>
-                {% else %}
-                    <a class="active" href="login">Login</a>
-                {% endif %}
-                </li>
-            </ul>
-        </nav>
-        </nav>
-    </header>
+    {% include "topnav.html" %}
 
     <h1>Welcome to {{ user.username }}'s profile!</h1>
     <p>User ID: {{ user.id }}</p>
     <p>Account Type: {{ user.userType }}</p>
     <p>Creation date: {{ user.creationTime }}</p>
+
+    {% if session.get('userid') == user.id %}
+        <button id="resetPasswordButton" class="profile-action-button">Reset Password</button>
+    {% endif %}
 
     <h3> Created drawings </h3>
     <p>Created Drawings: {{ user.creationsIDs }}</p>
@@ -39,8 +25,9 @@
 
     <input type="hidden" id="loginUsernameInput" value="{{ user.id }}">
 
-    <script type="module" src="static/js/userpage.js"></script>
-    <script src="static/js/cross_site_functions.js"></script>
-
+    {% block extra_scripts %}
+        <script type="module" src="{{ url_for('static', filename='js/userpage.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/cross_site_functions.js') }}"></script>
+    {% endblock %}
 </body>
 </html>

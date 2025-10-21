@@ -538,6 +538,8 @@ def register_account():
         return jsonify({"error": "Username and password required"}), 400
     if len(username) < 2 or len(username) > 16:
         return jsonify({"error": "Username must be between 2 and 16 characters"}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters!"}), 400
 
     password_hash = generate_password_hash(password)  # hash server-side
 
@@ -572,7 +574,6 @@ def attempt_login():
     password = request.form.get('password', '').strip()  # raw password from client
 
     # Check for admin login
-    print(os.getenv('ADMIN_PASSWORD'))
     if username == os.getenv('ADMIN_USERNAME') and password == os.getenv('ADMIN_PASSWORD'):
         session['admin'] = True
         session['username'] = username
@@ -617,6 +618,52 @@ def attempt_login():
     else:
         return jsonify({"error": "Invalid credentials"}), 401
 
+@api_bp.route('/reset_password', methods=['POST'])
+def reset_password():
+    # 1. Check if user is logged in
+    if 'userid' not in session or 'username' not in session:
+        return jsonify({"error": "You must be logged in to reset your password."}), 401
+
+    data = request.get_json()
+    current_password = data.get('current_password', '').strip()
+    new_password = data.get('new_password', '').strip()
+    user_id = session['userid']
+
+    # 2. Input Validation
+    if not current_password or not new_password:
+        return jsonify({"error": "Current password and new password are required."}), 400
+    if len(new_password) < 6:
+        return jsonify({"error": "New password must be at least 6 characters!"}), 400
+    if current_password == new_password:
+        return jsonify({"error": "New password must be different from the current password."}), 400
+
+    conn = get_db_connection('userinfo.db')
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT password FROM userinfo WHERE id = ?", (user_id,))
+        user_record = cursor.fetchone()
+
+        if not user_record:
+            return jsonify({"error": "User record not found."}), 404
+
+        stored_hash = user_record['password']
+        if not check_password_hash(stored_hash, current_password):
+            return jsonify({"error": "Invalid current password."}), 401
+        new_password_hash = generate_password_hash(new_password)
+
+        cursor.execute(
+            "UPDATE userinfo SET password = ? WHERE id = ?",
+            (new_password_hash, user_id)
+        )
+        conn.commit()
+        return jsonify({"status": "Password successfully reset."}), 200
+
+    except sqlite3.Error as e:
+        conn.rollback()
+        return jsonify({"error": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 @api_bp.route('/logout', methods=['POST'])
 def logout():
