@@ -3,6 +3,7 @@ import re
 import json
 import sqlite3
 import time
+import atexit
 from datetime import datetime, timezone, timedelta
 from flask import Blueprint, request, jsonify, session, redirect, url_for
 from threading import Thread
@@ -117,7 +118,71 @@ def load_pixel_array():
     return pixelArray
 
 pixelArray = load_pixel_array()
+# Insert this function after load_pixel_array()
+
+def flush_pending_updates():
+    global pendingUpdates
     
+    # 1. Take a snapshot of the updates and clear the global list immediately
+    if not pendingUpdates:
+        print("[Flush Thread] No pending updates to flush.")
+        return
+        
+    updates_to_process = pendingUpdates[:]
+    pendingUpdates.clear()
+
+    conn = None
+    try:
+        conn = get_db_connection('pixels.db')
+        cursor = conn.cursor()
+        sql = """
+        INSERT OR REPLACE INTO pixels (x, y, colour, ip_address) 
+        VALUES (?, ?, ?, ?)
+        """
+        
+        data = [
+            (update['x'], update['y'], update['colour'], update['ip_address'])
+            for update in updates_to_process
+        ]
+        
+        cursor.executemany(sql, data)
+        conn.commit()
+        
+        print(f"[Flush Thread] Successfully flushed {len(updates_to_process)} pixel update(s).")
+        
+    except sqlite3.Error as e:
+        print(f"[Flush Thread ERROR] Database error during flush: {e}")
+        if conn:
+            conn.rollback()
+    except Exception as e:
+        print(f"[Flush Thread ERROR] General error during flush: {e}")
+    finally:
+        if conn:
+            conn.close()
+
+stop_thread = False 
+
+def background_flush_loop():
+    global stop_thread
+    print(f"[Startup] Starting background flush thread (Interval: {saveInterval}s)...")
+    while not stop_thread:
+        flush_pending_updates()
+        try:
+            for _ in range(saveInterval // 1):
+                if stop_thread:
+                    break
+                time.sleep(1)
+        except Exception:
+            break
+    print("[Shutdown] Background flush thread stopped.")
+
+flush_thread = Thread(target=background_flush_loop)
+flush_thread.daemon = True
+flush_thread.start()
+print("[Startup] Background flush thread started successfully!")
+
+__all__ = ['pendingUpdates', 'get_db_connection', 'stop_thread', 'flush_pending_updates', 'flush_thread']
+
 @api_bp.route('/get_session_data', methods=['GET'])
 def get_session_data():
     if 'userid' in session and 'username' in session:
@@ -675,3 +740,16 @@ def logout():
     return jsonify({"message": "Logged out successfully"})
 
 __all__ = ['pendingUpdates', 'get_db_connection']
+
+def graceful_shutdown():
+    global stop_thread
+    print("\n[Shutdown Hook] Server shutdown detected. Forcing final data flush...")
+    stop_thread = True 
+    
+    if flush_thread.is_alive():
+        flush_thread.join(timeout=5) # Wait up to 5 seconds
+    
+    flush_pending_updates() 
+    print("[Shutdown Hook] Final flush complete. Canvas state saved to disk.")
+
+atexit.register(graceful_shutdown)

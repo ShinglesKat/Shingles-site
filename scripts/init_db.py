@@ -43,12 +43,24 @@ def init_db():
     init_database('database.db')
 
 def init_pixel_db():
+    CELL_SIDE_COUNT = 50 # Assuming this is defined globally, or pass it in
+    
     def setup_pixels(cursor):
-        for y, x in itertools.product(range(50), range(50)):
-            cursor.execute(
-                "INSERT INTO pixels (x, y, colour, ip_address) VALUES (?, ?, ?, ?)",  # Fixed column name
-                (x, y, '#ffffff', None)  # Added # prefix for consistency
+        cursor.execute("SELECT COUNT(*) FROM pixels")
+        count = cursor.fetchone()[0]
+
+        if count == 0:
+            print("Canvas is empty. Initializing all pixels to white.")
+            default_pixels = [
+                (x, y, '#ffffff', None) 
+                for y, x in itertools.product(range(CELL_SIDE_COUNT), range(CELL_SIDE_COUNT))
+            ]
+            cursor.executemany(
+                "INSERT INTO pixels (x, y, colour, ip_address) VALUES (?, ?, ?, ?)", 
+                default_pixels
             )
+        else:
+            print(f"Canvas contains {count} pixels. Skipping default initialization.")
     init_database('pixels.db', setup_pixels)
 
 def init_userinfo_db():
