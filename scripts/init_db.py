@@ -7,37 +7,50 @@ database_bp = Blueprint('databases', __name__)
 
 def init_database(db_name, initialization_func=None):
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(script_dir)
-    databases_dir = os.path.join(project_root, 'databases')
+    databases_dir = os.path.join(script_dir, '../databases')
     os.makedirs(databases_dir, exist_ok=True)
     db_path = os.path.join(databases_dir, db_name)
     
+    print(f"[DB Init] Checking database: {db_name}")
+    print(f"[DB Init] Full path: {db_path}")
+    print(f"[DB Init] Database exists: {os.path.exists(db_path)}")
+    
     if not os.path.exists(db_path):
-        print(f"{db_name} not found, initializing...")
+        print(f"[DB Init] {db_name} not found, initializing...")
         connection = sqlite3.connect(db_path)
         try:
-            # Look for schema.sql in the project root
-            schema_path = os.path.join(project_root, 'schema.sql')
-            if os.path.exists(schema_path):
-                with open(schema_path, 'r') as f:
-                    connection.executescript(f.read())
-                print(f"Applied schema.sql to {db_name}")
-            else:
-                print(f"Warning: schema.sql not found at {schema_path}")
+            schema_path = os.path.join(script_dir, '../schema.sql')
+            print(f"[DB Init] Loading schema from: {schema_path}")
+            
+            with open(schema_path, 'r') as f:
+                schema_content = f.read()
+                print(f"[DB Init] Schema loaded, executing...")
+                connection.executescript(schema_content)
+            
+            print(f"[DB Init] Schema executed successfully")
             
             cursor = connection.cursor()
             if initialization_func:
+                print(f"[DB Init] Running initialization function: {initialization_func.__name__}")
                 initialization_func(cursor)
+                print(f"[DB Init] Initialization function completed")
+            else:
+                print(f"[DB Init] No initialization function provided")
+            
             connection.commit()
-            print(f"Successfully initialized {db_name}")
+            print(f"[DB Init] Database {db_name} initialized successfully")
+            
         except sqlite3.Error as e:
-            print(f"Error occurred while initializing {db_name}: {e}")
+            print(f"[DB Init ERROR] SQLite error occurred while initializing {db_name}: {e}")
+        except FileNotFoundError as e:
+            print(f"[DB Init ERROR] Schema file not found: {e}")
         except Exception as e:
-            print(f"General error initializing {db_name}: {e}")
+            print(f"[DB Init ERROR] Unexpected error: {e}")
         finally:
             connection.close()
+            print(f"[DB Init] Connection closed")
     else:
-        print(f"{db_name} already exists, skipping initialization.")
+        print(f"[DB Init] {db_name} already exists, skipping initialization.")
 
 def init_db():
     init_database('database.db')
