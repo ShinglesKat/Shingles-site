@@ -8,13 +8,12 @@ from datetime import datetime, timezone, timedelta
 from flask import Blueprint, request, jsonify, session, redirect, url_for
 from threading import Thread
 from werkzeug.security import generate_password_hash, check_password_hash
-from config import ADMIN_USERNAME, ADMIN_PASSWORD, SAVE_INTERVAL
+from config import ADMIN_USERNAME, ADMIN_PASSWORD, CELL_SIDE_COUNT, SAVE_INTERVAL
+from scripts.config import DEFAULT_COLOUR
+from scripts.hf_misc import get_db_connection
 
 api_bp = Blueprint('api_bp', __name__)
 
-CELL_SIDE_COUNT = 50
-DEFAULT_COLOUR = "#ffffff"
-saveInterval = 300
 pendingUpdates = []
 pixelArray = []
 
@@ -69,32 +68,6 @@ def handle_ban_check(custom_message):
                 error_message += f" Ban expires: {ban_info['expires_at']}"
         return jsonify({'error': error_message}), 403
     return None
-
-def get_db_connection(db_name='database.db'):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(base_dir)
-    db_path = os.path.join(project_root, 'databases', db_name)
-    print(f"Opening database at: {db_path}") 
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def parse_duration(duration):
-    time_units = {
-        'w': 7 * 24 * 60 * 60,
-        'd': 24 * 60 * 60,
-        'h': 60 * 60,
-        'm': 60,
-        's': 1,
-    }
-    pattern = r'(\d+)\s*(w|d|h|m|s)'
-    matches = re.findall(pattern, duration.lower())
-    
-    if not matches:
-        raise ValueError("Invalid duration format")
-    
-    total_seconds = sum(int(value) * time_units[unit] for value, unit in matches)
-    return timedelta(seconds=total_seconds)
 
 def load_pixel_array():
     global pixelArray
@@ -164,11 +137,11 @@ stop_thread = False
 
 def background_flush_loop():
     global stop_thread
-    print(f"[Startup] Starting background flush thread (Interval: {saveInterval}s)...")
+    print(f"[Startup] Starting background flush thread (Interval: {SAVE_INTERVAL}s)...")
     while not stop_thread:
         flush_pending_updates()
         try:
-            for _ in range(saveInterval // 1):
+            for _ in range(SAVE_INTERVAL // 1):
                 if stop_thread:
                     break
                 time.sleep(1)

@@ -5,17 +5,9 @@ import requests
 from flask import Blueprint, render_template, redirect, request, session, send_from_directory
 
 from config import FREEVIEW_PAGE, FREEVIEW_URL_PREFIX, CELL_SIDE_COUNT
+from scripts.hf_misc import get_db_connection
 
 routes_bp = Blueprint('routes_bp', __name__)
-
-# Database connection
-def get_db_connection(db_name='database.db'):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(base_dir)
-    db_path = os.path.join(project_root, 'databases', db_name)
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    return conn
 
 @routes_bp.route('/favicon.ico')
 def favicon():
