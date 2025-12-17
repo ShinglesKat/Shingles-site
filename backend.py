@@ -1,4 +1,5 @@
 from flask import Flask, session, redirect, request, jsonify, render_template, url_for
+from scripts import canvas_states
 from scripts.hf_misc import get_db_connection
 from scripts.hf_databases import (
     database_bp,
@@ -29,7 +30,7 @@ from markupsafe import escape
 from dotenv import load_dotenv
 from flask_talisman import Talisman
 import requests
-from config import SAVE_INTERVAL, SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD
+from config import CELL_SIDE_COUNT, SAVE_INTERVAL, SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD
 
 from scripts.canvas_states import pendingUpdates
 
@@ -87,6 +88,40 @@ Talisman(
     frame_options=None,
     x_xss_protection=False,
 )
+
+def load_pixels_from_db():
+    print("[Startup] Loading pixels from database...")
+    
+    conn = get_db_connection('pixels.db')
+    cursor = conn.cursor()
+    
+    try:
+        from scripts.config import DEFAULT_COLOUR
+        canvas_states.pixelArray = [[{'colour': DEFAULT_COLOUR, 'ip_address': None} 
+                                     for _ in range(CELL_SIDE_COUNT)]
+                                    for _ in range(CELL_SIDE_COUNT)]
+        
+        cursor.execute("SELECT x, y, colour, ip_address FROM pixels")
+        rows = cursor.fetchall()
+        
+        loaded_count = 0
+        for row in rows:
+            x, y, colour, ip_address = row
+            if 0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT:
+                canvas_states.pixelArray[y][x] = {
+                    'colour': colour,
+                    'ip_address': ip_address
+                }
+                loaded_count += 1
+        
+        print(f"[Startup] Loaded {loaded_count} pixels from database")
+        
+    except Exception as e:
+        print(f"[Startup ERROR] Failed to load pixels: {e}")
+    finally:
+        conn.close()
+
+
 def should_init_pixel_db():
     try:
         conn = get_db_connection('pixels.db')
@@ -105,7 +140,9 @@ if should_init_pixel_db():
     init_pixel_db()
 else:
     print("[Init] Pixel DB already has data, skipping init_pixel_db()")
-    
+
+load_pixels_from_db()
+
 def flush_pending_updates():
     global _thread_running
     _thread_running = True
