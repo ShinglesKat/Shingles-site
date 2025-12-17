@@ -9,7 +9,7 @@ async function register_account(event) {
     }
 
     try {
-        const response = await fetch("/api/register_account", {
+        const response = await fetch("/account/register_account", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password })  // send raw password
@@ -36,7 +36,7 @@ async function attempt_login(event) {
     const password = document.getElementById('loginPasswordInput').value.trim();
 
     try {
-        const response = await fetch("/api/login", {
+        const response = await fetch("/account/login", {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
             body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`

@@ -6,12 +6,12 @@ async function fetch_user(event) {
         let response;
         if (userId) {
             // Fetch by ID
-            response = await fetch(`/api/userinfo?id=${encodeURIComponent(userId)}`);
+            response = await fetch(`/admin/userinfo?id=${encodeURIComponent(userId)}`);
             if (!response.ok) {
                 throw new Error('ID not found');
             }
         } else if (userUsername) {
-            response = await fetch(`/api/userinfo?username=${encodeURIComponent(userUsername)}`);
+            response = await fetch(`/admin/userinfo?username=${encodeURIComponent(userUsername)}`);
             if (!response.ok) {
                 throw new Error('Username not found');
             }
@@ -40,8 +40,6 @@ async function fetch_user(event) {
     }
 }
 
-
-
 async function saveUserChanges() {
     const id = document.getElementById('editUserId').value;
     const username = document.getElementById('editUsername').value;
@@ -59,7 +57,7 @@ async function saveUserChanges() {
     }
 
     try {
-        const response = await fetch('/api/update_user', {
+        const response = await fetch('/admin/update_user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id, username, hashed_password, userType, userDrawings })

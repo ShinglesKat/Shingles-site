@@ -294,7 +294,7 @@ async function saveCanvasData() {
 
     try {
         // Check session first
-        const sessionResponse = await fetch('/api/get_session_data');
+        const sessionResponse = await fetch('/get_session_data');
         if (!sessionResponse.ok) {
             throw new Error("You must be logged in to do that!");
         }
@@ -318,7 +318,7 @@ async function saveCanvasData() {
         };
 
         // Save the drawing
-        const saveResponse = await fetch('/api/save_drawing', {
+        const saveResponse = await fetch('/singleplayer/save_drawing', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(dataToSend)
@@ -349,7 +349,7 @@ async function saveCanvasData() {
 
 async function loadRecentDrawings() {
     try {
-        const response = await fetch('/api/retrieve_drawings?limit=5');
+        const response = await fetch('/multiplayer/retrieve_drawings?limit=5');
         const drawings = await response.json();
 
         if (!Array.isArray(drawings)) {
@@ -375,7 +375,7 @@ async function loadRecentDrawings() {
 
 async function loadAllDrawings() {
     try {
-        const response = await fetch('/api/retrieve_drawings'); // all drawings, newest first
+        const response = await fetch('/multiplayer/retrieve_drawings'); // all drawings, newest first
         const drawings = await response.json();
 
         if (!Array.isArray(drawings) || drawings.length === 0) {

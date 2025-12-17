@@ -1,4 +1,5 @@
 from flask import Flask, session, redirect, request, jsonify, render_template, url_for
+from scripts.hf_misc import get_db_connection
 from scripts.hf_databases import (
     database_bp,
     init_database,
@@ -29,9 +30,19 @@ from dotenv import load_dotenv
 from flask_talisman import Talisman
 import requests
 from config import SAVE_INTERVAL, SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD
-from scripts.routes import routes_bp
+
 from scripts.canvas_states import pendingUpdates
-from scripts.api import api_bp, get_db_connection
+
+from scripts.api import api_bp
+from scripts.routes import routes_bp
+from scripts.bp_account_handling import account_handling_bp
+from scripts.bp_admin import admin_bp
+from scripts.bp_message_board import message_board_bp
+from scripts.bp_multiplayer_canvas import multiplayer_canvas_bp
+from scripts.bp_session_handling import session_handling_bp
+from scripts.bp_singleplayer_canvas import singleplayer_canvas_bp
+
+
 # Boyfriend stuff :3
 from config import FREEVIEW_PAGE, FREEVIEW_URL_PREFIX
 
@@ -45,6 +56,13 @@ app.secret_key = SECRET_KEY
 app.register_blueprint(database_bp)
 app.register_blueprint(routes_bp)
 app.register_blueprint(api_bp, url_prefix='/api')
+app.register_blueprint(account_handling_bp, url_prefix='/account')
+app.register_blueprint(admin_bp, url_prefix='/admin')
+app.register_blueprint(message_board_bp, url_prefix='/messages')
+app.register_blueprint(multiplayer_canvas_bp, url_prefix='/multiplayer')
+app.register_blueprint(session_handling_bp)
+app.register_blueprint(singleplayer_canvas_bp, url_prefix='/singleplayer')
+
 csp = {
     'default-src': ["'self'"],
     'script-src': ["'self'"],

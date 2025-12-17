@@ -5,7 +5,7 @@ async function add_message(event) {
     const content = document.getElementById('messageInput').value;
 
     try {
-        const response = await fetch("/api/post_message", {
+        const response = await fetch("/messages/post_message", {
             method: "POST",
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded",
@@ -40,7 +40,7 @@ async function add_message(event) {
 }
 
 setInterval(() => {
-    fetch('/api/check_ban_status')
+    fetch('/check_ban_status')
     .then(res => res.json())
     .then(data => {
         if (data.banned) {
@@ -63,7 +63,7 @@ setInterval(() => {
 
 async function retrieve_messages(){
     try {
-        const response = await fetch("/api/get_messages");
+        const response = await fetch("/messages/get_messages");
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
         }
@@ -85,7 +85,7 @@ let sessionCache = null;
 // Add function to check and cache session info
 async function checkSession() {
     try {
-        const response = await fetch('/api/get_session_data');
+        const response = await fetch('/get_session_data');
         if (response.ok) {
             sessionCache = await response.json();
             console.log('Session cached:', sessionCache);
@@ -129,7 +129,7 @@ function banUserFromMessage(ip) {
 
     console.log('Sending ban request:', { ip, reason: message, ban_duration: duration });
 
-    fetch("/api/ban_ip", {
+    fetch("/admin/ban_ip", {
         method: "POST",
         headers: { 
             "Content-Type": "application/json"
@@ -260,7 +260,7 @@ function buildMessageHTML(msg) {
     if (msg.can_delete) {
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `/api/delete_message/${msg.id}`;
+        form.action = `/messages/delete_message/${msg.id}`;
         form.style.display = 'inline';
         form.style.marginRight = '10px';
 
@@ -291,7 +291,7 @@ function buildMessageHTML(msg) {
 }
 
 function fetchMessages() {
-    fetch('/api/get_messages')
+    fetch('/messages/get_messages')
         .then(response => response.json())
         .then(data => {
             diffMessages(data);

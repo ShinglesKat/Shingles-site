@@ -49,7 +49,7 @@ function getCellCoordinates(e) {
     return { cellX, cellY };
 }
 
-fetch("/api/canvas")
+fetch("/multiplayer/canvas")
     .then(res => res.json())
     .then(data => {
         for (let y = 0; y < CELL_SIDE_COUNT; y++) {
@@ -77,7 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // Periodic ban status check - this will show popup if user gets banned during session
 setInterval(() => {
-    fetch('/api/check_ban_status')
+    fetch('/check_ban_status')
     .then(res => res.json())
     .then(data => {
         if (data.banned) {
@@ -184,7 +184,7 @@ function fillCell(cellX, cellY) {
     drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
     colourHistory[`${cellX}_${cellY}`] = colourInput.value;
 
-    fetch("/api/canvas/update", {
+    fetch("/multiplayer/canvas/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ x: cellX, y: cellY, colour: colourInput.value }),
@@ -227,7 +227,7 @@ function refreshCanvasFromServer() {
         return;
     }
 
-    fetch("/api/canvas")
+    fetch("/multiplayer/canvas")
         .then(res => res.json())
         .then(data => {
             for (let y = 0; y < CELL_SIDE_COUNT; y++) {
@@ -368,7 +368,7 @@ function showTooltip(content, clientX, clientY, ip) {
                     return;
                 }
 
-                fetch("/api/ban_ip", {
+                fetch("/ban_ip", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ ip, reason: message, ban_duration: duration })
@@ -391,7 +391,7 @@ function showTooltip(content, clientX, clientY, ip) {
     if (sessionCache) {
         renderTooltip(sessionCache.accounttype === 'admin');
     } else {
-        fetch('/api/get_session_data')
+        fetch('/get_session_data')
             .then(res => res.ok ? res.json() : Promise.reject('Not logged in'))
             .then(data => {
                 sessionCache = data;
@@ -419,7 +419,7 @@ function clearCanvas() {
         }
     }
 
-    fetch("/api/canvas/clear", {
+    fetch("/multiplayer/canvas/clear", {
         method: "POST"
     }).then(res => res.json())
         .then(data => {

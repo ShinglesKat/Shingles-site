@@ -4,7 +4,7 @@ const userID = document.getElementById('loginUsernameInput').value;
 
 async function fetchUserDrawings() {
     try {
-        const response = await fetch(`api/get_user_drawings/${userID}`);
+        const response = await fetch(`/account/get_user_drawings/${userID}`);
         if (!response.ok) {
             console.error('Failed to fetch drawings:', response.statusText);
             return;
@@ -69,7 +69,7 @@ function handlePasswordReset() {
         new_password: newPassword
     };
 
-    fetch('/api/reset_password', {
+    fetch('/account/reset_password', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -86,7 +86,7 @@ function handlePasswordReset() {
     })
     .then(data => {
         alert(data.status || "Password successfully reset!");
-        return fetch('/api/logout', { 
+        return fetch('/account/logout', { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

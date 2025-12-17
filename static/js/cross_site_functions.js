@@ -12,7 +12,7 @@ if (!window.logoutListenerAdded) {
         event.preventDefault();
         
         if (confirmLogout()) {
-            fetch('/api/logout', {
+            fetch('/account/logout', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
