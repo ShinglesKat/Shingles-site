@@ -7,24 +7,7 @@
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
-    <header>
-        <h1 style="display:inline;">Shingles's Awesome Website</h1>
-        <hr class="header-separator"/>
-        <nav class="topnav">
-            <ul>
-                <li><a class="active" href="/">Home</a></li>
-                <li><a class="active" href="message">Leave a Message</a></li>
-                <li><a class="active" href="canvas">Pixel Canvas</a></li>
-                <li>
-                {% if session.get('username') %}
-                    <a href="/logout" class="active logout-link">Logout ({{ session['username'] }})</a>
-                {% else %}
-                    <a class="active" href="login">Login</a>
-                {% endif %}
-                </li>
-            </ul>
-        </nav>
-    </header>
+    {% include "topnav.html" %}
     
     <div id="tooltip"></div>
     <div id="canvasWrapper">
