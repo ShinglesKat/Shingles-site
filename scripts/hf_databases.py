@@ -3,6 +3,8 @@ import os
 import itertools
 from flask import Blueprint
 
+from config import CELL_SIDE_COUNT
+
 database_bp = Blueprint('databases', __name__)
 
 def init_database(db_name, initialization_func=None):
@@ -56,8 +58,6 @@ def init_db():
     init_database('database.db')
 
 def init_pixel_db():
-    CELL_SIDE_COUNT = 50 # Assuming this is defined globally, or pass it in
-    
     def setup_pixels(cursor):
         cursor.execute("SELECT COUNT(*) FROM pixels")
         count = cursor.fetchone()[0]

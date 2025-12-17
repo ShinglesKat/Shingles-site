@@ -1,5 +1,5 @@
 from flask import Flask, session, redirect, request, jsonify, render_template, url_for
-from scripts.init_db import (
+from scripts.hf_databases import (
     database_bp,
     init_database,
     init_pixel_db,
@@ -15,7 +15,6 @@ init_userinfo_db()
 init_userdrawings_db()
 init_bannedips_db()
 init_pixel_db() 
-from scripts.api import pendingUpdates
 from datetime import datetime, timedelta, timezone
 import sqlite3
 from threading import Lock, Thread
@@ -31,7 +30,8 @@ from flask_talisman import Talisman
 import requests
 from config import SAVE_INTERVAL, SECRET_KEY, ADMIN_USERNAME, ADMIN_PASSWORD
 from scripts.routes import routes_bp
-from scripts.api import api_bp, pendingUpdates, get_db_connection
+from scripts.canvas_states import pendingUpdates
+from scripts.api import api_bp, get_db_connection
 # Boyfriend stuff :3
 from config import FREEVIEW_PAGE, FREEVIEW_URL_PREFIX
 
