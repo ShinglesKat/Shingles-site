@@ -15,7 +15,7 @@ body {
     justify-content: center;
     margin: 0;
     padding: 0;
-    font-family: 'Baloo 2', cursive;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
 }
 
 /* Header styling */
@@ -32,7 +32,7 @@ header {
 header h1 {
     margin: 0;
     color: #fff;
-    font-family: 'Baloo 2', cursive;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
     font-size: 2.5rem;
     text-align: center;
     letter-spacing: 1px;
@@ -100,7 +100,7 @@ footer a {
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-family: 'Baloo 2', cursive;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
 }
 
 #mainContainer {
@@ -114,7 +114,7 @@ footer a {
 main h2,
 main h3 {
     text-align: center;
-    font-family: 'Baloo 2', cursive;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
     margin: 2rem 0 1rem 0;
 }
 
@@ -215,7 +215,7 @@ a.active[href="admin"]:hover {
     align-items: center;
     gap: 10px;
     margin: 2rem 0;
-    font-family: 'Baloo 2', cursive;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
 }
 
 #userInfo h3 {
@@ -250,7 +250,7 @@ a.active[href="admin"]:hover {
 #allUsers {
     text-align: center;
     margin: 2rem 0;
-    font-family: 'Baloo 2', cursive;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
 }
 
 #allUsers h3 {
@@ -283,4 +283,52 @@ a.active[href="admin"]:hover {
     #mainContainer {
         padding: 1rem;
     }
+}
+
+
+/* Update log */
+.update-log {
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    max-width: 700px;
+    margin: 2rem auto;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.update-log h2 {
+    margin-top: 0;
+    margin-bottom: 0.4rem;
+    text-align: center;
+    color: #e3a157;
+    font-size: 1.8rem;
+}
+
+.update-log ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.update-log li {
+    display: flex;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.update-log li:last-child {
+    border-bottom: none;
+}
+
+.update-log .date {
+    min-width: 110px;
+    font-weight: bold;
+    color: #555;
+    font-size: 0.95rem;
+}
+
+.update-log .entry {
+    color: #333;
+    line-height: 1.4;
 }

@@ -82,7 +82,6 @@ async function retrieve_messages(){
 
 let sessionCache = null;
 
-// Add function to check and cache session info
 async function checkSession() {
     try {
         const response = await fetch('/get_session_data');
@@ -104,11 +103,8 @@ async function checkSession() {
 
 function banUserFromMessage(ip) {
     console.log('banUserFromMessage called with IP:', ip);
-    
-    // First, let's check if we have session info
     console.log('Current sessionCache:', sessionCache);
     
-    // Check if user has admin privileges first
     if (!sessionCache || sessionCache.accounttype !== 'admin') {
         console.log('Permission denied - not admin or no session');
         alert('You do not have permission to ban users.');
@@ -164,7 +160,6 @@ document.addEventListener('DOMContentLoaded', () => {
         commentForm.addEventListener('submit', add_message);
     }
     
-    // Check session on page load
     checkSession();
     
     fetchMessages();
@@ -195,28 +190,22 @@ function diffMessages(newMessages) {
 
         let li = existing.get(id);
         if (!li) {
-            // Add new message
             li = document.createElement('li');
             li.setAttribute('data-id', id);
             li.innerHTML = buildMessageHTML(msg);
-            
-            // Add event listeners after setting innerHTML
             attachEventListeners(li, msg);
             
             messageList.prepend(li);
         } else {
-            // Check if content changed
             const temp = document.createElement('div');
             temp.innerHTML = buildMessageHTML(msg);
             if (li.innerHTML !== temp.innerHTML) {
                 li.innerHTML = buildMessageHTML(msg);
-                // Re-attach event listeners after updating innerHTML
                 attachEventListeners(li, msg);
             }
         }
     });
 
-    // Remove messages no longer present
     existing.forEach((li, id) => {
         if (!seen.has(id)) {
             li.remove();
@@ -225,7 +214,6 @@ function diffMessages(newMessages) {
 }
 
 function attachEventListeners(li, msg) {
-    // Find and attach event listeners to ban buttons
     if (msg.can_ban && msg.ip_address) {
         const banBtn = li.querySelector('.ban-button');
         if (banBtn) {
@@ -241,19 +229,16 @@ function attachEventListeners(li, msg) {
 function buildMessageHTML(msg) {
     const container = document.createElement('div');
 
-    // Message text (username + message content)
     const messageText = document.createElement('div');
     messageText.textContent = `${msg.username}: ${msg.content}`;
     container.appendChild(messageText);
 
-    // Timestamp on its own line
     const timestamp = document.createElement('div');
     timestamp.textContent = msg.created;
     timestamp.style.fontSize = '0.9em';
     timestamp.style.color = '#666';
     container.appendChild(timestamp);
 
-    // Buttons container
     const buttons = document.createElement('div');
     buttons.style.marginTop = '5px';
 
@@ -276,7 +261,7 @@ function buildMessageHTML(msg) {
     if (msg.can_ban && msg.ip_address) {
         const banBtn = document.createElement('button');
         banBtn.type = 'button';
-        banBtn.className = 'ban-button'; // Add class for easy selection
+        banBtn.className = 'ban-button';
         banBtn.textContent = 'Ban User';
         banBtn.style.cssText = 'background-color:#fd7e14; color:white; border:none; padding:5px 10px; cursor:pointer; margin-left: 5px;';
         

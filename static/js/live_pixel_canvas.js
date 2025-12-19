@@ -4,6 +4,8 @@
  */
 
 let isDrawing = false;
+let isBanned = false;
+
 const canvas = document.getElementById("canvas")
 const guide = document.getElementById("guide")
 const colourInput = document.getElementById("colourInput")
@@ -14,6 +16,7 @@ const CELL_SIDE_COUNT = 50;
 const cellPixelLength = canvas.width / CELL_SIDE_COUNT;
 const colourHistory = {};
 const ipHistory = {};
+const pendingUpdates = {};
 
 let lastHoveredCell = { x: -1, y: -1 }; // To keep track of the previously hovered cell
 
@@ -72,15 +75,11 @@ fetch("/multiplayer/canvas")
     });
 
 document.addEventListener("DOMContentLoaded", () => {
-    // Initial ban check removed - now handled server-side per request
-});
-
-// Periodic ban status check - this will show popup if user gets banned during session
-setInterval(() => {
     fetch('/check_ban_status')
     .then(res => res.json())
     .then(data => {
         if (data.banned) {
+            isBanned = true;
             let banMessage = "You have been banned from drawing on the canvas.";
             if (data.reason) {
                 banMessage += `\nReason: ${data.reason}`;
@@ -90,13 +89,12 @@ setInterval(() => {
                 banMessage += `\nThis ban expires on: ${expiryDate.toLocaleString()}`;
             }
             alert(banMessage);
-            window.location.reload();
         }
     })
     .catch(err => {
         console.error("Error checking ban status:", err);
     });
-}, 5000);
+});
 
 document.querySelectorAll(".colour-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -105,7 +103,6 @@ document.querySelectorAll(".colour-btn").forEach(btn => {
     });
 });
 
-//Setup the guide
 {
     guide.style.gridTemplateColumns = `repeat(${CELL_SIDE_COUNT}, 1fr)`;
     guide.style.gridTemplateRows = `repeat(${CELL_SIDE_COUNT}, 1fr)`;
@@ -148,7 +145,10 @@ canvas.addEventListener("contextmenu", (e) => {
 });
 
 function handleCanvasMousedown(e) {
-    //Ensure user is using primary mouse button.
+    if (isBanned) {
+        return;
+    }
+
     if (e.button !== 0) {
         return;
     }
@@ -177,12 +177,19 @@ function handleToggleGuideChange() {
 }
 
 function fillCell(cellX, cellY) {
+    if (isBanned) {
+        return;
+    }
+
     const startX = cellX * cellPixelLength;
     const startY = cellY * cellPixelLength;
+    const key = `${cellX}_${cellY}`;
 
     drawingContext.fillStyle = colourInput.value;
     drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
-    colourHistory[`${cellX}_${cellY}`] = colourInput.value;
+    colourHistory[key] = colourInput.value;
+
+    pendingUpdates[key] = colourInput.value;
 
     fetch("/multiplayer/canvas/update", {
         method: "POST",
@@ -198,24 +205,24 @@ function fillCell(cellX, cellY) {
         return res.json();
     })
     .then(data => {
-        // Success - pixel was updated
         console.log("Pixel updated successfully");
+        delete pendingUpdates[key];
     })
     .catch(err => {
         console.error("Error updating cell:", err);
+        delete pendingUpdates[key];
         
-        // Check if this is a ban-related error
         if (err.message.includes("banned") || err.message.includes("Ban")) {
-            // Revert the optimistic update
-            const originalColour = "#ffffff"; // Default or fetch from server
+            isBanned = true;
+            
+            const originalColour = "#ffffff";
             drawingContext.fillStyle = originalColour;
             drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
             colourHistory[`${cellX}_${cellY}`] = originalColour;
             
-            // Show ban message
             alert(err.message);
         } else {
-            // For other errors, also revert the change
+            //For other errors, also revert the change
             refreshCanvasFromServer();
         }
     });
@@ -232,23 +239,24 @@ function refreshCanvasFromServer() {
         .then(data => {
             for (let y = 0; y < CELL_SIDE_COUNT; y++) {
                 for (let x = 0; x < CELL_SIDE_COUNT; x++) {
-                    const pixelData = data[y][x]; //This will now be an object {colour: "...", ip_address: "..."}
+                    const pixelData = data[y][x];
                     const key = `${x}_${y}`;
 
-                    //Check if pixelData exists and has a colour property
                     if (pixelData && pixelData.colour !== undefined) {
                         const {colour} = pixelData;
-                        const ip = pixelData.ip_address; // Get the IP
+                        const ip = pixelData.ip_address;
 
-                        //Only update if the colour has changed and it's not the currently hovered cell
-                        if (colour !== colourHistory[key] && !(x === lastHoveredCell.x && y === lastHoveredCell.y)) {
+                        // Don't overwrite pending updates or hovered cells
+                        if (colour !== colourHistory[key] && 
+                            !pendingUpdates[key] && 
+                            !(x === lastHoveredCell.x && y === lastHoveredCell.y)) {
                             const startX = x * cellPixelLength;
                             const startY = y * cellPixelLength;
 
                             drawingContext.fillStyle = colour;
                             drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
                             colourHistory[key] = colour;
-                            ipHistory[key] = ip; //Store the IP
+                            ipHistory[key] = ip;
                         }
                     }
                 }
@@ -270,14 +278,12 @@ function handleCanvasMousemove(e) {
 
             drawingContext.fillStyle = originalColour;
             drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
-            lastHoveredCell = { x: -1, y: -1 }; //Reset
+            lastHoveredCell = { x: -1, y: -1 };
         }
         return;
     }
 
-    //Only update if the hovered cell has changed
     if (cellX !== lastHoveredCell.x || cellY !== lastHoveredCell.y) {
-        //Restore the color of the previously hovered cell
         if (lastHoveredCell.x !== -1) {
             const prevX = lastHoveredCell.x;
             const prevY = lastHoveredCell.y;
@@ -295,7 +301,6 @@ function handleCanvasMousemove(e) {
         drawingContext.fillStyle = colourInput.value;
         drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
 
-        //Update the last hovered cell
         lastHoveredCell = { x: cellX, y: cellY };
     }
 
@@ -305,6 +310,9 @@ function handleCanvasMousemove(e) {
 }
 
 canvas.addEventListener("mousedown", (e) => {
+    if (isBanned) {
+        return;
+    }
     isDrawing = true;
     handleCanvasMousedown(e);
 });
@@ -314,7 +322,6 @@ canvas.addEventListener("mouseup", () => {
 });
 canvas.addEventListener("mouseleave", () => {
     isDrawing = false;
-    //When the mouse leaves the canvas, restore the last hovered cell's color
     if (lastHoveredCell.x !== -1) {
         const prevX = lastHoveredCell.x;
         const prevY = lastHoveredCell.y;
@@ -324,14 +331,14 @@ canvas.addEventListener("mouseleave", () => {
 
         drawingContext.fillStyle = originalColour;
         drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
-        lastHoveredCell = { x: -1, y: -1 }; // Reset
+        lastHoveredCell = { x: -1, y: -1 };
     }
 });
 
 toggleGuide.addEventListener("change", handleToggleGuideChange);
 
-//Poll server for update every second :>
-setInterval(refreshCanvasFromServer, 1000);
+//Poll server for update every second and half :>
+setInterval(refreshCanvasFromServer, 1500);
 
 //Admin stuff
 const clearCanvasButton = document.getElementById("clearCanvasBtn");
@@ -340,6 +347,7 @@ if (clearCanvasButton) {
         clearCanvas();
     })
 }
+
 //init tooltip for pixels
 const tooltip = document.getElementById("tooltip");
 
