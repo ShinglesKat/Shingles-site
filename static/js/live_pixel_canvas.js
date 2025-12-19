@@ -376,7 +376,7 @@ function showTooltip(content, clientX, clientY, ip) {
                     return;
                 }
 
-                fetch("/ban_ip", {
+                fetch("/admin/ban_ip", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ ip, reason: message, ban_duration: duration })
