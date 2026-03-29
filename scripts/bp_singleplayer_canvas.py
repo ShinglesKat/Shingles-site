@@ -1,5 +1,5 @@
-
 import json
+import re
 import sqlite3
 from flask import Blueprint, jsonify, redirect, request, session, url_for
 
@@ -8,6 +8,54 @@ from scripts.hf_misc import get_db_connection
 
 
 singleplayer_canvas_bp = Blueprint('singeplayer_canvas_bp', __name__)
+
+HEX_COLOUR_RE = re.compile(r'^#[0-9A-Fa-f]{6}$')
+MAX_PIXELS = 10_000
+
+
+def parse_and_validate_drawing(data):
+    if not isinstance(data, dict):
+        raise ValueError("Request body must be a JSON object.")
+
+    piece_name = data.get('piece_name')
+    content    = data.get('content')
+    private    = data.get('private')
+    piece_id   = data.get('piece_id')
+
+    if not isinstance(piece_name, str) or not piece_name.strip():
+        raise ValueError("'piece_name' must be a non-empty string.")
+    if not isinstance(private, bool):
+        raise ValueError("'private' must be a boolean.")
+    if piece_id is not None and not isinstance(piece_id, int):
+        raise ValueError("'piece_id' must be an integer or null.")
+
+    if not isinstance(content, str):
+        raise ValueError("'content' must be a JSON string.")
+
+    try:
+        pixels = json.loads(content)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"'content' is not valid JSON: {e}")
+
+    if not isinstance(pixels, list):
+        raise ValueError("'content' must decode to a JSON array.")
+    if len(pixels) > MAX_PIXELS:
+        raise ValueError(f"Too many pixels (max {MAX_PIXELS}).")
+
+    for i, px in enumerate(pixels):
+        if not isinstance(px, dict):
+            raise ValueError(f"Pixel {i} is not an object.")
+        if not isinstance(px.get('x'), int):
+            raise ValueError(f"Pixel {i}: 'x' must be an integer.")
+        if not isinstance(px.get('y'), int):
+            raise ValueError(f"Pixel {i}: 'y' must be an integer.")
+        colour = px.get('colour')
+        if not isinstance(colour, str) or not HEX_COLOUR_RE.match(colour):
+            raise ValueError(f"Pixel {i}: 'colour' must be a 6-digit hex string like #RRGGBB.")
+
+    clean_content = json.dumps(pixels, separators=(',', ':'))
+    return clean_content, piece_name.strip(), private, piece_id
+
 
 @singleplayer_canvas_bp.route('/save_drawing', methods=['POST'])
 def upload_pixel_canvas():
@@ -22,23 +70,20 @@ def upload_pixel_canvas():
     user_id = session['userid']
     username = session['username']
 
-    data = request.get_json()
-    print("Received data:", data)
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Invalid or missing JSON body."}), 400
 
-    content = data.get('content')
-    piece_name = data.get('piece_name')
-    private = data.get('private')
-    piece_id = data.get('piece_id')
-
-    if not all([content, piece_name, private is not None]):
-        return jsonify({"error": "Missing fields"}), 400
+    try:
+        content, piece_name, private, piece_id = parse_and_validate_drawing(data)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
 
     conn = get_db_connection('userdrawings.db')
     cursor = conn.cursor()
     new_piece = False
     try:
         if piece_id:
-            # Validate ownership before updating
             cursor.execute("SELECT user_id FROM userdrawings WHERE id = ?", (piece_id,))
             existing = cursor.fetchone()
             if not existing:
@@ -59,7 +104,6 @@ def upload_pixel_canvas():
                 WHERE user_id = ? AND piece_name = ?
             """, (user_id, piece_name))
             if existing_piece := cursor.fetchone():
-                # Update the existing piece instead of inserting
                 cursor.execute("""
                     UPDATE userdrawings
                     SET content = ?, private = ?, creationTime = CURRENT_TIMESTAMP
@@ -101,6 +145,7 @@ def upload_pixel_canvas():
 
     except sqlite3.Error as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
+
 
 @singleplayer_canvas_bp.route('/delete_drawing/<int:drawing_id>', methods=['POST'])
 def delete_drawing(drawing_id):
