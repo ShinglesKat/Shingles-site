@@ -1,8 +1,8 @@
-# config.py
+# scripts/config.py
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # load .env file once here
+load_dotenv()
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME')

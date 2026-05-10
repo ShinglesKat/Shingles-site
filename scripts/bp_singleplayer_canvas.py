@@ -1,13 +1,13 @@
 import json
 import re
 import sqlite3
+
 from flask import Blueprint, jsonify, redirect, request, session, url_for
 
-from scripts.hf_bans import handle_ban_check
-from scripts.hf_misc import get_db_connection
+from scripts.utils_bans import handle_ban_check
+from scripts.utils_misc import get_db_connection
 
-
-singleplayer_canvas_bp = Blueprint('singeplayer_canvas_bp', __name__)
+singleplayer_canvas_bp = Blueprint('singleplayer_canvas_bp', __name__)
 
 HEX_COLOUR_RE = re.compile(r'^#[0-9A-Fa-f]{6}$')
 MAX_PIXELS = 10_000
@@ -28,7 +28,6 @@ def parse_and_validate_drawing(data):
         raise ValueError("'private' must be a boolean.")
     if piece_id is not None and not isinstance(piece_id, int):
         raise ValueError("'piece_id' must be an integer or null.")
-
     if not isinstance(content, str):
         raise ValueError("'content' must be a JSON string.")
 
@@ -53,15 +52,12 @@ def parse_and_validate_drawing(data):
         if not isinstance(colour, str) or not HEX_COLOUR_RE.match(colour):
             raise ValueError(f"Pixel {i}: 'colour' must be a 6-digit hex string like #RRGGBB.")
 
-    clean_content = json.dumps(pixels, separators=(',', ':'))
-    return clean_content, piece_name.strip(), private, piece_id
+    return json.dumps(pixels, separators=(',', ':')), piece_name.strip(), private, piece_id
 
 
 @singleplayer_canvas_bp.route('/save_drawing', methods=['POST'])
 def upload_pixel_canvas():
-    if ban_response := handle_ban_check(
-        "You are banned from uploading images!"
-    ):
+    if ban_response := handle_ban_check("You are banned from uploading images!"):
         return ban_response
 
     if 'userid' not in session or 'username' not in session:
@@ -90,19 +86,17 @@ def upload_pixel_canvas():
                 return jsonify({"error": "Drawing not found"}), 404
             if existing['user_id'] != user_id:
                 return jsonify({"error": "You do not have permission to modify this drawing"}), 403
-
             cursor.execute("""
-                UPDATE userdrawings 
-                SET content = ?, private = ?, creationTime = CURRENT_TIMESTAMP 
+                UPDATE userdrawings
+                SET content = ?, private = ?, creationTime = CURRENT_TIMESTAMP
                 WHERE id = ?
             """, (content, private, piece_id))
             drawing_id = piece_id
-
         else:
-            cursor.execute("""
-                SELECT id FROM userdrawings 
-                WHERE user_id = ? AND piece_name = ?
-            """, (user_id, piece_name))
+            cursor.execute(
+                "SELECT id FROM userdrawings WHERE user_id = ? AND piece_name = ?",
+                (user_id, piece_name),
+            )
             if existing_piece := cursor.fetchone():
                 cursor.execute("""
                     UPDATE userdrawings
@@ -113,7 +107,7 @@ def upload_pixel_canvas():
             else:
                 new_piece = True
                 cursor.execute("""
-                    INSERT INTO userdrawings (user_id, username, piece_name, content, private) 
+                    INSERT INTO userdrawings (user_id, username, piece_name, content, private)
                     VALUES (?, ?, ?, ?, ?)
                 """, (user_id, username, piece_name, content, private))
                 drawing_id = cursor.lastrowid
@@ -128,20 +122,14 @@ def upload_pixel_canvas():
             if result := cursor.fetchone():
                 creations_list = json.loads(result['creationsIDs']) if result['creationsIDs'] else []
                 creations_list.append(drawing_id)
-                updated_creations_json = json.dumps(creations_list)
-
-                cursor.execute("""
-                    UPDATE userinfo
-                    SET creationsIDs = ?
-                    WHERE id = ?
-                """, (updated_creations_json, user_id))
+                cursor.execute(
+                    "UPDATE userinfo SET creationsIDs = ? WHERE id = ?",
+                    (json.dumps(creations_list), user_id),
+                )
                 conn.commit()
             conn.close()
 
-        return jsonify({
-            "message": "Canvas saved/updated successfully!",
-            "id": drawing_id
-        }), 200
+        return jsonify({"message": "Canvas saved/updated successfully!", "id": drawing_id}), 200
 
     except sqlite3.Error as e:
         return jsonify({"error": f"Database error: {str(e)}"}), 500
@@ -173,10 +161,13 @@ def delete_drawing(drawing_id):
     cursor = conn.cursor()
     cursor.execute("SELECT creationsIDs FROM userinfo WHERE id = ?", (drawing['user_id'],))
     if user_info := cursor.fetchone():
-        creationsIDs = json.loads(user_info['creationsIDs'])
-        if drawing_id in creationsIDs:
-            creationsIDs.remove(drawing_id)
-            cursor.execute("UPDATE userinfo SET creationsIDs = ? WHERE id = ?", (json.dumps(creationsIDs), drawing['user_id']))
+        creations_ids = json.loads(user_info['creationsIDs'])
+        if drawing_id in creations_ids:
+            creations_ids.remove(drawing_id)
+            cursor.execute(
+                "UPDATE userinfo SET creationsIDs = ? WHERE id = ?",
+                (json.dumps(creations_ids), drawing['user_id']),
+            )
             conn.commit()
     conn.close()
 

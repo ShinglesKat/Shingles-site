@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify, session
 
-from scripts.hf_bans import handle_ban_check
-
+from scripts.utils_bans import handle_ban_check
 
 session_handling_bp = Blueprint('session_handling_bp', __name__)
+
 
 @session_handling_bp.route('/get_session_data', methods=['GET'])
 def get_session_data():
@@ -11,11 +11,10 @@ def get_session_data():
         return jsonify({
             'userid': session['userid'],
             'username': session['username'],
-            'accounttype': session.get('accounttype')
+            'accounttype': session.get('accounttype'),
         })
-    else:
-        return jsonify({'error': 'User not logged in'}), 401
-    
+    return jsonify({'error': 'User not logged in'}), 401
+
 
 @session_handling_bp.route('/check_ban_status', methods=['GET'])
 def check_ban_status():

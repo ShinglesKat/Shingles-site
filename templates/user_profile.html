@@ -4,6 +4,7 @@
     <title>{{ user.username }}'s Profile - Shingles's Amazing Website</title>
     <link rel="stylesheet" href="static/css/styles.css">
     <link rel="stylesheet" href="static/css/userprofile.css">
+    <link rel="stylesheet" href="static/css/canvas.css">
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
 </head>
 
@@ -21,7 +22,7 @@
 
     <h3> Created drawings </h3>
     <p>Created Drawings: {{ user.creationsIDs }}</p>
-    <div id="drawings" class="drawing-row"></div>
+    <div id="drawings"></div>
 
     <input type="hidden" id="loginUsernameInput" value="{{ user.id }}">
 

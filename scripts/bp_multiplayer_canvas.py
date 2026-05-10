@@ -3,15 +3,16 @@ from flask import Blueprint, jsonify, request, session
 from config import CELL_SIDE_COUNT
 from scripts import canvas_states
 from scripts.config import DEFAULT_COLOUR
-from scripts.hf_bans import get_user_ip, handle_ban_check
-from scripts.hf_misc import get_db_connection
-
+from scripts.utils_bans import get_user_ip, handle_ban_check
+from scripts.utils_misc import get_db_connection
 
 multiplayer_canvas_bp = Blueprint('multiplayer_canvas_bp', __name__)
+
 
 @multiplayer_canvas_bp.route('/canvas', methods=['GET'])
 def get_pixel_array():
     return jsonify(canvas_states.pixelArray)
+
 
 @multiplayer_canvas_bp.route('/canvas/clear', methods=['POST'])
 def clear_canvas():
@@ -20,13 +21,17 @@ def clear_canvas():
 
     conn = get_db_connection('pixels.db')
     cursor = conn.cursor()
-    cursor.execute("UPDATE pixels SET colour = ? WHERE x BETWEEN 0 AND ? AND y BETWEEN 0 AND ?", 
-                   (DEFAULT_COLOUR, CELL_SIDE_COUNT - 1, CELL_SIDE_COUNT - 1))
+    cursor.execute(
+        "UPDATE pixels SET colour = ? WHERE x BETWEEN 0 AND ? AND y BETWEEN 0 AND ?",
+        (DEFAULT_COLOUR, CELL_SIDE_COUNT - 1, CELL_SIDE_COUNT - 1),
+    )
     conn.commit()
     conn.close()
 
-    canvas_states.pixelArray[:] = [[{'colour': DEFAULT_COLOUR, 'ip_address': None} for _ in range(CELL_SIDE_COUNT)]
-                                   for _ in range(CELL_SIDE_COUNT)]
+    canvas_states.pixelArray[:] = [
+        [{'colour': DEFAULT_COLOUR, 'ip_address': None} for _ in range(CELL_SIDE_COUNT)]
+        for _ in range(CELL_SIDE_COUNT)
+    ]
     canvas_states.pendingUpdates.clear()
     return jsonify({"status": "Canvas cleared successfully!"})
 
@@ -38,10 +43,7 @@ def update_pixel():
             return ban_response
 
         data = request.get_json()
-
-        # Support both single pixel and batch (list of pixels)
         pixels = data if isinstance(data, list) else [data]
-
         user_ip = get_user_ip()
         updated = []
 
@@ -64,12 +66,13 @@ def update_pixel():
         print(f"[CANVAS UPDATE ERROR] {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+
 @multiplayer_canvas_bp.route('/retrieve_drawings', methods=['GET'])
 def retrieve_drawings():
     limit = request.args.get('limit', type=int)
     conn = get_db_connection('userdrawings.db')
     cursor = conn.cursor()
-    
+
     if limit is not None:
         cursor.execute("""
             SELECT * FROM userdrawings

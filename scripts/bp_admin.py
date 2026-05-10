@@ -1,10 +1,12 @@
 import sqlite3
-from flask import Blueprint, jsonify, request, session
-
-from scripts.hf_misc import get_db_connection, parse_duration
 from datetime import datetime, timezone
 
+from flask import Blueprint, jsonify, request, session
+
+from scripts.utils_misc import get_db_connection, parse_duration
+
 admin_bp = Blueprint('admin_bp', __name__)
+
 
 @admin_bp.route('/ban_ip', methods=['POST'])
 def ban_ip():
@@ -33,15 +35,15 @@ def ban_ip():
     try:
         for ip in ips:
             cursor.execute("SELECT ip FROM bannedIPs WHERE ip = ?", (ip,))
-            if existing_ban := cursor.fetchone():
+            if cursor.fetchone():
                 cursor.execute(
                     "UPDATE bannedIPs SET reason = ?, ban_duration = ?, ban_expires_at = ? WHERE ip = ?",
-                    (reason, ban_duration, expires_at.isoformat(), ip)
+                    (reason, ban_duration, expires_at.isoformat(), ip),
                 )
             else:
                 cursor.execute(
                     "INSERT INTO bannedIPs (ip, reason, ban_duration, ban_expires_at) VALUES (?, ?, ?, ?)",
-                    (ip, reason, ban_duration, expires_at.isoformat())
+                    (ip, reason, ban_duration, expires_at.isoformat()),
                 )
         conn.commit()
         return jsonify({'status': f'Banned {len(ips)} IP(s). Expires: {expires_at.isoformat()}'}), 200
@@ -59,11 +61,9 @@ def api_get_userinfo():
     username = request.args.get('username')
 
     if user_id:
-        query = "SELECT * FROM userinfo WHERE id = ?"
-        param = (user_id,)
+        query, param = "SELECT * FROM userinfo WHERE id = ?", (user_id,)
     elif username:
-        query = "SELECT * FROM userinfo WHERE username = ?"
-        param = (username,)
+        query, param = "SELECT * FROM userinfo WHERE username = ?", (username,)
     else:
         return jsonify({"error": "No user ID or username provided"}), 400
 
@@ -78,6 +78,7 @@ def api_get_userinfo():
 
     return jsonify(dict(user))
 
+
 @admin_bp.route('/update_user', methods=['POST'])
 def update_user():
     if session.get('accounttype') != 'admin':
@@ -90,7 +91,7 @@ def update_user():
     new_type = data.get('userType')
     new_drawings = data.get('userDrawings')
 
-    if not (user_id and new_username and new_password and new_type and new_drawings):
+    if not all([user_id, new_username, new_password, new_type, new_drawings]):
         return jsonify({"error": "Missing fields"}), 400
 
     conn = get_db_connection('userinfo.db')
@@ -98,7 +99,8 @@ def update_user():
     try:
         cursor.execute(
             "UPDATE userinfo SET username = ?, password = ?, userType = ?, creationsIDs = ? WHERE id = ?",
-            (new_username, new_password, new_type, new_drawings, user_id))
+            (new_username, new_password, new_type, new_drawings, user_id),
+        )
         conn.commit()
         return jsonify({"status": "User updated successfully"})
     except sqlite3.Error as e:

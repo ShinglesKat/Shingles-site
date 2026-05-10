@@ -27,6 +27,15 @@
     aspect-ratio: 1; /* Keep it square */
 }
 
+#drawings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    justify-items: center;
+    margin: 20px auto;
+    max-width: min(90vw, 1000px);
+    padding: 0 20px;
+}
 #canvas {
     display: block;
     width: 100%;
@@ -346,6 +355,7 @@ main h3 {
         font-size: 11px;
     }
 }
+
 
 /* Very large screens */
 @media screen and (min-width: 1200px) {
