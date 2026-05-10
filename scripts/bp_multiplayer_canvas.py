@@ -30,6 +30,7 @@ def clear_canvas():
     canvas_states.pendingUpdates.clear()
     return jsonify({"status": "Canvas cleared successfully!"})
 
+
 @multiplayer_canvas_bp.route('/canvas/update', methods=['POST'])
 def update_pixel():
     try:
@@ -37,19 +38,28 @@ def update_pixel():
             return ban_response
 
         data = request.get_json()
-        x = data.get('x')
-        y = data.get('y')
-        colour = data.get('colour')
-        if None in (x, y, colour):
-            return jsonify({'error': 'Missing data fields'}), 400
-        if not (0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT):
-            return jsonify({'error': 'Coordinates out of bounds'}), 400
 
-        pixel_data = {'colour': colour, 'ip_address': get_user_ip()}
-        canvas_states.pixelArray[y][x] = pixel_data
-        canvas_states.pendingUpdates.append({'x': x, 'y': y, **pixel_data})
+        # Support both single pixel and batch (list of pixels)
+        pixels = data if isinstance(data, list) else [data]
 
-        return jsonify({'status': 'Pixel updated successfully'}), 200
+        user_ip = get_user_ip()
+        updated = []
+
+        for pixel in pixels:
+            x = pixel.get('x')
+            y = pixel.get('y')
+            colour = pixel.get('colour')
+            if None in (x, y, colour):
+                return jsonify({'error': 'Missing data fields'}), 400
+            if not (0 <= x < CELL_SIDE_COUNT and 0 <= y < CELL_SIDE_COUNT):
+                return jsonify({'error': 'Coordinates out of bounds'}), 400
+
+            pixel_data = {'colour': colour, 'ip_address': user_ip}
+            canvas_states.pixelArray[y][x] = pixel_data
+            canvas_states.pendingUpdates.append({'x': x, 'y': y, **pixel_data})
+            updated.append({'x': x, 'y': y})
+
+        return jsonify({'status': 'Pixels updated successfully', 'updated': updated}), 200
     except Exception as e:
         print(f"[CANVAS UPDATE ERROR] {e}")
         return jsonify({'error': 'Internal server error'}), 500

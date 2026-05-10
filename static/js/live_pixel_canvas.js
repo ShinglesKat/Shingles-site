@@ -17,6 +17,8 @@ const cellPixelLength = canvas.width / CELL_SIDE_COUNT;
 const colourHistory = {};
 const ipHistory = {};
 const pendingUpdates = {};
+const batchBuffer = [];
+const BATCH_SEND_INTERVAL = 500; // Send batched updates every 500ms
 
 let lastHoveredCell = { x: -1, y: -1 }; // To keep track of the previously hovered cell
 
@@ -191,40 +193,74 @@ function fillCell(cellX, cellY) {
 
     pendingUpdates[key] = colourInput.value;
 
+    // Add to batch buffer instead of sending immediately
+    const existingIndex = batchBuffer.findIndex(update => update.x === cellX && update.y === cellY);
+    if (existingIndex !== -1) {
+        // Update existing entry in batch
+        batchBuffer[existingIndex].colour = colourInput.value;
+    } else {
+        // Add new entry to batch
+        batchBuffer.push({x: cellX, y: cellY, colour: colourInput.value});
+    }
+}
+
+function sendBatchUpdate() {
+    if (batchBuffer.length === 0) {
+        return;
+    }
+
+    const updatesToSend = [...batchBuffer];
+    batchBuffer.length = 0; // Clear the buffer
+
     fetch("/multiplayer/canvas/update", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ x: cellX, y: cellY, colour: colourInput.value }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(updatesToSend),
     })
-    .then(res => {
-        if (!res.ok) {
-            return res.json().then(errorData => {
-                throw new Error(errorData.error || `Failed to update canvas cell. Status: ${res.status}`);
+        .then(res => {
+            if (!res.ok) {
+                return res.json().then(errorData => {
+                    throw new Error(errorData.error || `Failed to update canvas cells. Status: ${res.status}`);
+                });
+            }
+            return res.json();
+        })
+        .then(data => {
+            console.log(`Batch updated ${updatesToSend.length} pixel(s) successfully`);
+            // Clear pending updates for successfully sent pixels
+            updatesToSend.forEach(update => {
+                const key = `${update.x}_${update.y}`;
+                delete pendingUpdates[key];
             });
-        }
-        return res.json();
-    })
-    .then(data => {
-        console.log("Pixel updated successfully");
-        delete pendingUpdates[key];
-    })
-    .catch(err => {
-        console.error("Error updating cell:", err);
-        delete pendingUpdates[key];
-        
-        if (err.message.includes("banned") || err.message.includes("Ban")) {
-            isBanned = true;
-            
-            const originalColour = "#ffffff";
-            drawingContext.fillStyle = originalColour;
-            drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
-            colourHistory[`${cellX}_${cellY}`] = originalColour;
-            
-            alert(err.message);
-        } else {
-            //For other errors, also revert the change
-            refreshCanvasFromServer();
-        }
+        })
+        .catch(err => {
+            console.error("Error updating cells in batch:", err);
+
+            if (err.message.includes("banned") || err.message.includes("Ban")) {
+                isBanned = true;
+
+                // Revert all pixels in the failed batch
+                updatesToSend.forEach(update => {
+                    const key = `${update.x}_${update.y}`;
+                    const startX = update.x * cellPixelLength;
+                    const startY = update.y * cellPixelLength;
+                    const originalColour = "#ffffff";
+
+                    drawingContext.fillStyle = originalColour;
+                    drawingContext.fillRect(startX, startY, cellPixelLength, cellPixelLength);
+                    colourHistory[key] = originalColour;
+                    delete pendingUpdates[key];
+                });
+
+                alert(err.message);
+            } else {
+                // For other errors, clear pending updates and refresh from server
+                updatesToSend.forEach(update => {
+                    const key = `${update.x}_${update.y}`;
+                    delete pendingUpdates[key];
+                });
+                refreshCanvasFromServer();
+            }
     });
 }
 
@@ -339,6 +375,9 @@ toggleGuide.addEventListener("change", handleToggleGuideChange);
 
 //Poll server for update every second and half :>
 setInterval(refreshCanvasFromServer, 1500);
+
+//Send batched updates periodically
+setInterval(sendBatchUpdate, BATCH_SEND_INTERVAL);
 
 //Admin stuff
 const clearCanvasButton = document.getElementById("clearCanvasBtn");
