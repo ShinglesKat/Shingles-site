@@ -20,61 +20,54 @@ body {
 /* ─── Header ────────────────────────────────────────── */
 header {
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem 0;
     background-color: #e3a157;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-header h1 {
-    margin: 0;
-    color: #fff;
-    font-size: 2.5rem;
-    text-align: center;
-    letter-spacing: 1px;
-}
-
-.header-separator {
-    width: 100px;
-    border: 0;
-    border-top: 3px solid #fff;
-    margin: 0.5rem auto;
+    box-sizing: border-box;
+    padding: 0 1.5rem;
 }
 
 /* ─── Navigation ────────────────────────────────────── */
+nav.topnav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 48px;
+}
+
+.site-title {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
+}
+
 nav.topnav ul {
     display: flex;
-    justify-content: space-around;
+    align-items: center;
     margin: 0;
     padding: 0;
     list-style: none;
-    width: 100%;
+    gap: 0.25rem;
 }
 
 nav.topnav li {
     display: inline-block;
-    position: relative;
 }
 
 nav.topnav a {
     display: block;
     color: white;
     text-align: center;
-    padding: 10px 30px;
+    padding: 6px 14px;
     text-decoration: none;
-    font-size: 1.1rem;
-    transition: all 0.3s ease-in-out;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
 }
 
 nav.topnav a:hover {
-    transform: translateY(-3px);
-}
-
-nav.topnav a.active {
-    border-radius: 2px;
-    font-weight: bold;
+    background-color: rgba(255,255,255,0.2);
 }
 
 /* ─── Footer ────────────────────────────────────────── */
@@ -113,7 +106,7 @@ main h3 {
     margin: 2rem 0 1rem 0;
 }
 
-/* Admin panel shortcut link (index page, admin only) */
+/* ─── Admin panel shortcut link ─────────────────────── */
 a.active[href="admin"] {
     display: block;
     text-align: center;
@@ -181,14 +174,21 @@ a.active[href="admin"]:hover {
 
 /* ─── Responsive ─────────────────────────────────────── */
 @media screen and (max-width: 768px) {
-    nav.topnav ul {
+    nav.topnav {
         flex-direction: column;
-        align-items: center;
+        height: auto;
+        padding: 0.5rem 0;
+        gap: 0.25rem;
     }
 
-    nav.topnav li {
-        width: 100%;
-        text-align: center;
+    nav.topnav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    nav.topnav a {
+        font-size: 0.85rem;
+        padding: 5px 10px;
     }
 
     header h1 {

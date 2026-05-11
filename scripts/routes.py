@@ -33,6 +33,9 @@ def render_login_page():
 def render_message_page():
     return render_template('message.html')
 
+@routes_bp.route('/homepage')
+def render_homepage():
+    return render_template('new_homepage.html')
 
 # ---------------------------------------------------------------------------
 # Canvas & Drawing pages

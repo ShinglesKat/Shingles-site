@@ -1,20 +1,17 @@
 <!-- templates/topnav.html -->
 <header>
-    <h1 style="display:inline;">Shingles's Awesome Website</h1>
-    <hr class="header-separator"/>
     <nav class="topnav">
+        <span class="site-title">Shingles's Awesome Website</span>
         <ul>
-            <li><a class="active" href="/">Home</a></li>
-            <li><a class="active" href="message">Leave a Message</a></li>
-            <li><a class="active" href="canvas">Pixel Canvas</a></li>
-            <li>{% if session.get('username') %}
-                <a class="active" href="/user?id={{ session['userid'] }}">My profile</a>
-            {% endif %}</li>
-            <li> {% if session.get('username') %}
-                <a class="active logout-link" href="#">Logout ({{ session['username'] }})</a>
+            <li><a href="/">Home</a></li>
+            <li><a href="message">Leave a Message</a></li>
+            <li><a href="canvas">Pixel Canvas</a></li>
+            {% if session.get('username') %}
+            <li><a href="/user?id={{ session['userid'] }}">My Profile</a></li>
+            <li><a class="logout-link" href="#">Logout ({{ session['username'] }})</a></li>
             {% else %}
-                <a class="active" href="login">Login</a>
-            </li>{% endif %}
+            <li><a href="login">Login</a></li>
+            {% endif %}
         </ul>
     </nav>
 </header>

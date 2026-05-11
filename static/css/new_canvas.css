@@ -1,0 +1,324 @@
+/*
+ * canvas.css — Pixel canvas styles
+ * Used by: canvas.html, live_canvas.html, user_profile.html
+ * Covers: canvas wrapper, grid guide, tooltip, control panel,
+ *         colour buttons, action buttons, and drawing card grids.
+ * The save-canvas modal lives in modal.css.
+ */
+
+/* ─── Canvas + sidebar layout ────────────────────────── */
+.canvas-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem auto;
+    max-width: min(90vw, 980px);
+}
+
+/* ─── Canvas wrapper ─────────────────────────────────── */
+#canvasWrapper {
+    box-sizing: border-box;
+    width: min(90vw, 780px);
+    height: min(90vw, 780px);
+    padding: 10px;
+    border: 4px solid #E1F5FE;
+    background-color: white;
+    margin: 0;
+    box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* ─── Canvas container ───────────────────────────────── */
+#canvasContainer {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+    background-color: #E1F5FE;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+}
+
+/* ─── Canvas element ─────────────────────────────────── */
+#canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+
+    pointer-events: auto;
+    touch-action: none;
+
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+/* ─── Grid guide overlay ─────────────────────────────── */
+#guide {
+    display: grid;
+    pointer-events: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    grid-template-columns: repeat(50, 1fr);
+    grid-template-rows: repeat(50, 1fr);
+    -webkit-user-drag: none;
+    -moz-user-drag: none;
+    user-drag: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+#guide div {
+    border: 1px solid rgba(0,0,0,0.1);
+    -webkit-user-drag: none;
+    -moz-user-drag: none;
+    user-drag: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+/* ─── Hover tooltip (live canvas) ───────────────────── */
+#tooltip {
+    position: absolute;
+    background: rgba(0,0,0,0.75);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    z-index: 1000;
+    max-width: 200px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    transition: opacity 0.3s ease;
+}
+
+#tooltip button {
+    margin-top: 6px;
+    padding: 6px 12px;
+    background-color: #e3a157;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#tooltip button:hover {
+    background-color: #d28e3c;
+}
+
+/* ─── Control panel ──────────────── */
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 0;
+    padding: 8px 6px;
+    background-color: #E1F5FE;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    width: 75px;
+    min-width: 75px;
+    max-width: 75px;
+    flex-shrink: 0;
+    align-self: stretch;
+}
+
+/* ─── Action button row (Clear / Save / Load) ────────── */
+.canvas-button-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem auto;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.canvas-action-btn {
+    display: inline-block;
+    background-color: #444;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    margin: 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.canvas-action-btn:hover {
+    background-color: #666;
+}
+
+/* ─── Colour preset buttons ──────────────────────────── */
+.preset-colours {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: 4px;
+    flex: 1;
+    width: 100%;
+}
+
+.colour-btn {
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 10px;
+    text-align: center;
+    transition: opacity 0.2s ease;
+}
+
+.colour-btn:hover {
+    opacity: 0.8;
+}
+
+/* ─── Drawing card grids ─────────────────────────────── */
+#drawings,
+#recentDrawings,
+#allOlderDrawings {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    justify-items: center;
+    margin: 20px auto;
+    max-width: min(90vw, 1000px);
+    padding: 0 20px;
+}
+
+/* ─── Individual drawing card ────────────────────────── */
+.drawing-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background-color: #E1F5FE;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.drawing-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.drawing-container canvas {
+    border: 1px solid #ccc;
+    background-color: #E1F5FE;
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+}
+
+.drawing-name {
+    font-weight: bold;
+    margin: 4px 0 0;
+    font-size: 16px;
+    color: #333;
+    text-align: center;
+}
+
+.drawing-user {
+    font-style: italic;
+    font-size: 0.9em;
+    margin: 0 0 8px;
+}
+
+/* ─── Responsive ─────────────────────────────────────── */
+@media screen and (max-width: 768px) {
+    .canvas-layout {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #canvasWrapper {
+        width: min(95vw, 500px);
+        height: min(95vw, 500px);
+        padding: 8px;
+    }
+
+    .control-panel {
+        flex-direction: row;
+        flex-wrap: wrap;
+        min-width: unset;
+        max-width: min(95vw, 500px);
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .preset-colours {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .colour-btn {
+        width: auto;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    #colourInput {
+        width: 60px;
+        height: 40px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    #canvasWrapper {
+        width: min(98vw, 350px);
+        height: min(98vw, 350px);
+        padding: 5px;
+    }
+
+    .colour-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    #canvasWrapper {
+        width: min(60vw, 800px);
+        height: min(60vw, 800px);
+    }
+}
