@@ -1,0 +1,110 @@
+/*
+ * homepage_chatroom.css — Chat panel for homepage
+ */
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 500px;
+    max-width: 500px;
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.chat-box {
+    flex: 1;
+    min-height: 0;
+    padding: 8px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 6px;
+    background: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    scroll-behavior: smooth;
+}
+
+.chat-box li,
+.message {
+    list-style: none;
+    background: #e1f5fe;
+    padding: 6px 8px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    word-wrap: break-word;
+    font-size: 14px;
+}
+
+.message {
+    border-left: 3px solid #e3a157;
+    margin-bottom: 0.4rem;
+}
+
+.chat-form {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #ddd;
+}
+
+.chat-form input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.chat-form button {
+    padding: 8px 0;
+    background: #e3a157;
+    color: white;
+    border: none;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.3s ease;
+}
+
+.chat-form button:hover { background: #d28e3c; }
+
+#successMessage {
+    height: 1.5em;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease;
+    text-align: center;
+    color: green;
+    font-weight: bold;
+    margin-top: 6px;
+    font-size: 11px;
+}
+
+#successMessage.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+@media (max-width: 768px) {
+    .chat-container {
+        width: 100%;
+        min-width: unset;
+        max-width: min(95vw, 500px);
+        height: 220px;
+        flex: unset;
+        align-self: center;
+    }
+}

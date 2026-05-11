@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Shingles's Amazing Website{% endblock %}
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/new_canvas.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/homepage.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/homepage_canvas.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/homepage_chatroom.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/homepage_colours.css') }}">
 <style>
-    @media screen and (min-width: 769px) {
+@media screen and (min-width: 769px) {
     html, body {
         overflow: hidden;
         height: 100%;
@@ -15,38 +18,52 @@
 <div id="tooltip"></div>
 <div class="canvas-layout">
 
-    <!-- Canvas -->
-    <div id="canvasWrapper">
-        <div id="canvasContainer">
-            <canvas id="canvas" width="750" height="750"></canvas>
-            <div id="guide"></div>
-        </div>
+    <!-- Chat (left) -->
+    <div class="chat-container">
+        <div class="chat-box" id="messageList"></div>
+        <form id="commentForm" class="chat-form">
+            <input id="nameInput" placeholder="Name..." required>
+            <input id="messageInput" placeholder="Message..." required>
+            <button type="submit">Send</button>
+        </form>
     </div>
 
-    <!-- Controls (right sidebar) -->
-    <div class="control-panel">
-        <div style="display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; text-align:center;">
-            <label for="colourInput">Colour</label>
-            <input type="color" id="colourInput" style="width:46px; height:26px; padding:1px; cursor:pointer; border:none; border-radius:6px;" />
-        </div>
-        <div style="display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; text-align:center;">
-            <label for="toggleGuide">Guide</label>
-            <input type="checkbox" id="toggleGuide" checked />
-        </div>
-        <div class="preset-colours">
-            <button class="colour-btn" data-colour="#e60000" style="background:#e60000;"></button>
-            <button class="colour-btn" data-colour="#e69100" style="background:#e69100;"></button>
-            <button class="colour-btn" data-colour="#e6e600" style="background:#e6e600;"></button>
-            <button class="colour-btn" data-colour="#00cc00" style="background:#00cc00;"></button>
-            <button class="colour-btn" data-colour="#0000e6" style="background:#0000e6;"></button>
-            <button class="colour-btn" data-colour="#43006f" style="background:#43006f;"></button>
-            <button class="colour-btn" data-colour="#df6fdf" style="background:#df6fdf;"></button>
-            <button class="colour-btn" data-colour="#000000" style="background:#000000;"></button>
-            <button class="colour-btn" data-colour="#ffffff" style="background:#ffffff;"></button>
-        </div>
-        <small style="font-size:9px; text-align:center; color:#555; line-height:1.3;">Ctrl+click<br>eyedropper</small>
-</div>
+    <!-- Canvas + Controls (right, grouped) -->
+    <div class="canvas-controls-group">
 
+        <div id="canvasWrapper">
+            <div id="canvasContainer">
+                <canvas id="canvas" width="750" height="750"></canvas>
+                <div id="guide"></div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; text-align:center;">
+                <label for="colourInput">Colour</label>
+                <input type="color" id="colourInput" style="width:46px; height:26px; padding:1px; cursor:pointer; border:none; border-radius:6px;" />
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10px; text-align:center;">
+                <label for="toggleGuide">Guide</label>
+                <input type="checkbox" id="toggleGuide" checked />
+            </div>
+            <div class="preset-colours">
+                <button class="colour-btn" data-colour="#e60000" style="background:#e60000;"></button>
+                <button class="colour-btn" data-colour="#e69100" style="background:#e69100;"></button>
+                <button class="colour-btn" data-colour="#e6e600" style="background:#e6e600;"></button>
+                <button class="colour-btn" data-colour="#00cc00" style="background:#00cc00;"></button>
+                <button class="colour-btn" data-colour="#0000e6" style="background:#0000e6;"></button>
+                <button class="colour-btn" data-colour="#43006f" style="background:#43006f;"></button>
+                <button class="colour-btn" data-colour="#df6fdf" style="background:#df6fdf;"></button>
+                <button class="colour-btn" data-colour="#000000" style="background:#000000;"></button>
+                <button class="colour-btn" data-colour="#ffffff" style="background:#ffffff;"></button>
+            </div>
+            <small style="font-size:9px; text-align:center; color:#555; line-height:1.3;">Ctrl+click<br>eyedropper</small>
+        </div>
+
+    </div>
+
+</div>
 <footer>
     {% if session.get('accounttype') == 'admin' %}
     <button id="clearCanvasBtn">Clear Canvas</button>
@@ -55,4 +72,6 @@
 {% endblock %}
 {% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/live_pixel_canvas.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/messages.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cross_site_functions.js') }}"></script>
 {% endblock %}

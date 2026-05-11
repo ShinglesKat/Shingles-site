@@ -1,0 +1,71 @@
+/*
+ * homepage_colours.css — Colour picker panel for homepage
+ */
+
+.control-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 6px;
+    background: #E1F5FE;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.08);
+    width: 70px;
+    min-width: 70px;
+    box-sizing: border-box;
+    align-self: stretch;
+}
+
+.preset-colours {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    gap: 4px;
+}
+
+.colour-btn {
+    width: 52px;
+    flex: 1;
+    min-height: 20px;
+    max-height: 52px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.colour-btn:hover { opacity: 0.8; }
+.colour-btn.selected { border-color: #333; }
+
+@media (max-width: 768px) {
+    .control-panel {
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: 100%;
+        min-width: unset;
+        max-width: min(95vw, 500px);
+        height: auto;
+        align-self: center;
+        justify-content: center;
+        padding: 8px;
+    }
+
+    .preset-colours {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        flex: unset;
+    }
+
+    .colour-btn {
+        width: 40px;
+        height: 40px;
+        flex: unset;
+    }
+}

@@ -1,0 +1,96 @@
+/*
+ * homepage_canvas.css — Canvas styles for homepage
+ */
+
+#canvasWrapper {
+    aspect-ratio: 1;
+    height: 100%;
+    width: auto;
+    padding: 2px;
+    border: 4px solid #E1F5FE;
+    background: white;
+    box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+#canvasContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: #E1F5FE;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
+}
+
+#canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+#guide {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(50, 1fr);
+    grid-template-rows: repeat(50, 1fr);
+    pointer-events: none;
+    user-select: none;
+}
+
+#guide div {
+    border: 1px solid rgba(0,0,0,0.1);
+}
+
+#tooltip {
+    position: absolute;
+    background: rgba(0,0,0,0.75);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    z-index: 1000;
+    max-width: 200px;
+    transition: opacity 0.3s ease;
+}
+
+#tooltip button {
+    margin-top: 6px;
+    padding: 6px 12px;
+    background: #e3a157;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#tooltip button:hover { background: #d28e3c; }
+
+@media (max-width: 768px) {
+    #canvasWrapper {
+        width: min(95vw, 500px);
+        height: min(95vw, 500px);
+    }
+}
+
+@media (max-width: 480px) {
+    #canvasWrapper {
+        width: min(98vw, 350px);
+        height: min(98vw, 350px);
+    }
+}

@@ -390,7 +390,7 @@ if (clearCanvasButton) {
 //init tooltip for pixels
 const tooltip = document.getElementById("tooltip");
 
-let sessionCache = null;
+let canvasSessionCache = null;
 
 function showTooltip(content, clientX, clientY, ip) {
     const renderTooltip = (isAdmin) => {
