@@ -1,0 +1,53 @@
+/*
+ * admin.css — Admin panel styles
+ * Used by: admin.html
+ */
+
+/* ─── User lookup form ───────────────────────────────── */
+#userInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 2rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+#userInfo h3 {
+    margin: 0 0 1rem 0;
+    text-align: center;
+}
+
+#userInfo input {
+    padding: 8px 12px;
+    border: 2px solid #e3a157;
+    border-radius: 5px;
+    width: 200px;
+    text-align: center;
+}
+
+#userInfo button {
+    padding: 10px 20px;
+    background-color: #e3a157;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+#userInfo button:hover {
+    background-color: #d4944a;
+}
+
+#userDisplay,
+#allUsers {
+    text-align: center;
+    margin: 2rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+#allUsers h3 {
+    margin-bottom: 1rem;
+}

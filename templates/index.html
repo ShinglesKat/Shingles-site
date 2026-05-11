@@ -2,21 +2,16 @@
 
 {% block title %}Shingles's amazing website{% endblock %}
 
-{% block extra_head %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-{% endblock %}
-
 {% block content %}
-    
+
     {% if session.get('accounttype') == 'admin' %}
         <a class="active" href="admin" style="margin-top: 1rem;">Admin panel</a>
     {% endif %}
+
     <div class="introduction">
         <img src="{{ url_for('static', filename='images/spooks.png') }}" alt="Shingles" width="400" height="400" title="Art by @NimbusBean on telegram :)">
         <h2>Welcome to my website!</h2>
         Welcome to my little corner of the internet. This is a simple pixel art sharing social media type thing. Enjoy :)<br>
-        
-        
     </div>
 
     <div class="update-log">
@@ -49,6 +44,7 @@
             <img alt="Vapore" src="{{ url_for('static', filename='images/vapore.png') }}">
         </a>
     </footer>
+
 {% endblock %}
 
 {% block extra_scripts %}

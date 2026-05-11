@@ -1,34 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>{{ user.username }}'s Profile - Shingles's Amazing Website</title>
-    <link rel="stylesheet" href="static/css/styles.css">
-    <link rel="stylesheet" href="static/css/userprofile.css">
-    <link rel="stylesheet" href="static/css/canvas.css">
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-</head>
+{% extends "base.html" %}
 
-<body>
-    {% include "topnav.html" %}
+{% block title %}{{ user.username }}'s Profile - Shingles's Amazing Website{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/userprofile.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/canvas.css') }}">
+{% endblock %}
+
+{% block content %}
 
     <h1>Welcome to {{ user.username }}'s profile!</h1>
+
     <p>User ID: {{ user.id }}</p>
     <p>Account Type: {{ user.userType }}</p>
     <p>Creation date: {{ user.creationTime }}</p>
 
     {% if session.get('userid') == user.id %}
-        <button id="resetPasswordButton" class="profile-action-button">Reset Password</button>
+        <button id="resetPasswordButton" class="profile-action-button">
+            Reset Password
+        </button>
     {% endif %}
 
-    <h3> Created drawings </h3>
+    <h3>Created drawings</h3>
+
     <p>Created Drawings: {{ user.creationsIDs }}</p>
+
     <div id="drawings"></div>
 
     <input type="hidden" id="loginUsernameInput" value="{{ user.id }}">
 
-    {% block extra_scripts %}
-        <script type="module" src="{{ url_for('static', filename='js/userpage.js') }}"></script>
-        <script src="{{ url_for('static', filename='js/cross_site_functions.js') }}"></script>
-    {% endblock %}
-</body>
-</html>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script type="module"
+            src="{{ url_for('static', filename='js/userpage.js') }}">
+    </script>
+{% endblock %}

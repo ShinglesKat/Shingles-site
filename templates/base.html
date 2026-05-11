@@ -3,8 +3,9 @@
 <html lang="en">
 <head>
     <title>{% block title %}Shingles's Amazing Website{% endblock %}</title>
-    {% block extra_head %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
 

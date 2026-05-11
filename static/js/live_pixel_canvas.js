@@ -400,8 +400,8 @@ function showTooltip(content, clientX, clientY, ip) {
             ${isAdmin ? `<button id="tooltip-btn">Ban user</button>` : ''}
         `;
         tooltip.style.display = "block";
-        tooltip.style.left = `${clientX + 10}px`;
-        tooltip.style.top = `${clientY + 10}px`;
+        tooltip.style.left = `${clientX + window.scrollX + 10}px`;
+        tooltip.style.top = `${clientY + window.scrollY + 10}px`;
 
         if (isAdmin) {
             document.getElementById("tooltip-btn").addEventListener("click", () => {
@@ -479,4 +479,12 @@ window.addEventListener('resize', () => {
     setTimeout(() => {
         refreshCanvasFromServer();
     }, 100);
+});
+
+document.addEventListener("click", (e) => {
+    const clickedInsideTooltip = tooltip.contains(e.target);
+
+    if (!clickedInsideTooltip) {
+        hideTooltip();
+    }
 });

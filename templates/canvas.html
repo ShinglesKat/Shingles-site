@@ -4,10 +4,11 @@
 
 {% block extra_head %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/canvas.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal.css') }}">
 {% endblock %}
 
 {% block content %}
+
     <div id="canvasWrapper">
         <div id="canvasContainer">
             <canvas id="canvas" width="750" height="750"></canvas>
@@ -27,15 +28,15 @@
         </div>
 
         <div class="preset-colours">
-            <button class="colour-btn" data-colour="#ff0000" style="background: #ff0000;">Red</button>
-            <button class="colour-btn" data-colour="#ffa500" style="background: #ffa500;">Orange</button>
-            <button class="colour-btn" data-colour="#ffff00" style="background: #ffff00;">Yellow</button>
-            <button class="colour-btn" data-colour="#00ff00" style="background: #00ff00;">Green</button>
-            <button class="colour-btn" data-colour="#0000ff" style="background: #0000ff; color: white;">Blue</button>
-            <button class="colour-btn" data-colour="#4b0082" style="background: #4b0082; color: white;">Indigo</button>
-            <button class="colour-btn" data-colour="#ee82ee" style="background: #ee82ee;">Violet</button>
-            <button class="colour-btn" data-colour="#000000" style="background: #000000; color: white;">Black</button>
-            <button class="colour-btn" data-colour="#ffffff" style="background: #ffffff; border: 1px solid #ccc;">White</button>
+            <button class="colour-btn" data-colour="#ff0000" style="background:#ff0000;">Red</button>
+            <button class="colour-btn" data-colour="#ffa500" style="background:#ffa500;">Orange</button>
+            <button class="colour-btn" data-colour="#ffff00" style="background:#ffff00;">Yellow</button>
+            <button class="colour-btn" data-colour="#00ff00" style="background:#00ff00;">Green</button>
+            <button class="colour-btn" data-colour="#0000ff" style="background:#0000ff;color:white;">Blue</button>
+            <button class="colour-btn" data-colour="#4b0082" style="background:#4b0082;color:white;">Indigo</button>
+            <button class="colour-btn" data-colour="#ee82ee" style="background:#ee82ee;">Violet</button>
+            <button class="colour-btn" data-colour="#000000" style="background:#000000;color:white;">Black</button>
+            <button class="colour-btn" data-colour="#ffffff" style="background:#ffffff;border:1px solid #ccc;">White</button>
             Eyedropper = ctrl + left click :)<br>
             Be good people - Shingles
         </div>
@@ -43,29 +44,27 @@
 
     <div class="canvas-button-wrapper">
         <button class="canvas-action-btn" id="clearCanvasBtn">Clear Canvas</button>
-        <button class="canvas-action-btn" id="saveCanvasBtn">Save & Upload Canvas</button>
+        <button class="canvas-action-btn" id="saveCanvasBtn">Save &amp; Upload Canvas</button>
         <button class="canvas-action-btn" id="loadCanvasBtn">Load Canvas (Coming soon)</button>
         <a class="canvas-action-btn" href="live_canvas">Switch to multiplayer drawing!</a>
     </div>
 
-    
     <h3>Recently uploaded:</h3>
     <div id="recentDrawings"></div>
-        <div class="canvas-button-wrapper">
-            <button id="loadAllDrawingsBtn" class="canvas-action-btn">Show All Drawings</button>
-        </div>
-            <div id="allOlderDrawings">
-        </div>
+
+    <div class="canvas-button-wrapper">
+        <button id="loadAllDrawingsBtn" class="canvas-action-btn">Show All Drawings</button>
     </div>
 
+    <div id="allOlderDrawings"></div>
 
-
+    <!-- Save canvas modal -->
     <div id="customModal" class="modal hidden">
         <div class="modal-content">
             <h2>Save Your Canvas</h2>
             <p>Name and privacy:</p>
             <input type="text" id="canvasNameInput" placeholder="Canvas name (3–30 characters)">
-    
+
             <div class="checkbox-wrapper">
                 <input type="checkbox" id="privateCheckbox">
                 <label for="privateCheckbox">Make this canvas private</label>
@@ -77,6 +76,7 @@
             </div>
         </div>
     </div>
+
 {% endblock %}
 
 {% block extra_scripts %}

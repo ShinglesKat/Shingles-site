@@ -1,0 +1,76 @@
+/*
+ * modal.css — Save-canvas modal dialog
+ * Used by: canvas.html
+ * Extracted from styles.css so modal rules don't bleed onto every page.
+ */
+
+.modal.hidden {
+    display: none;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 300px;
+    max-width: 90%;
+}
+
+.modal-content input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.checkbox-wrapper {
+    margin-top: 10px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.modal-actions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.modal-actions button:first-child {
+    background-color: #ccc;
+    color: #333;
+}
+
+.modal-actions button:first-child:hover {
+    background-color: #bbb;
+}
+
+.modal-actions button:last-child {
+    background-color: #e3a157;
+    color: white;
+}
+
+.modal-actions button:last-child:hover {
+    background-color: #d4944a;
+}

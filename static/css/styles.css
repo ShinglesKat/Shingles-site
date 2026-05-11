@@ -1,24 +1,23 @@
-/**
-Main site styles - cleaned and organized
-Shoutout chatgpt for helping me with css cause I am badddd at it lol
-. is class
-# is id
-**/
+/*
+ * styles.css — Global base styles
+ * Loaded on every page via base.html.
+ * Only put styles here that are truly site-wide.
+ * Page-specific styles belong in their own files.
+ */
 
-/* Global body styling */
+/* ─── Body ─────────────────────────────────────────── */
 body {
     background: #A1F9FF;
-    background: radial-gradient(circle, rgba(161, 249, 255, 1) 0%, rgba(212, 255, 255, 1) 100%);
+    background: radial-gradient(circle, rgba(161,249,255,1) 0%, rgba(212,255,255,1) 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Header styling */
+/* ─── Header ────────────────────────────────────────── */
 header {
     width: 100%;
     display: flex;
@@ -26,13 +25,12 @@ header {
     align-items: center;
     padding: 1rem 0;
     background-color: #e3a157;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 header h1 {
     margin: 0;
     color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
     font-size: 2.5rem;
     text-align: center;
     letter-spacing: 1px;
@@ -45,7 +43,7 @@ header h1 {
     margin: 0.5rem auto;
 }
 
-/* Navigation styling */
+/* ─── Navigation ────────────────────────────────────── */
 nav.topnav ul {
     display: flex;
     justify-content: space-around;
@@ -79,10 +77,10 @@ nav.topnav a.active {
     font-weight: bold;
 }
 
-/* Footer styling */
+/* ─── Footer ────────────────────────────────────────── */
 footer {
     position: fixed;
-    bottom: 0px;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
     width: fit-content;
@@ -93,14 +91,13 @@ footer a {
     text-decoration: none;
 }
 
-/* Main content containers */
+/* ─── Shared content containers ─────────────────────── */
 .introduction {
     max-width: fit-content;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
 }
 
 #mainContainer {
@@ -110,15 +107,13 @@ footer a {
     padding: 2rem;
 }
 
-/* Page headings */
 main h2,
 main h3 {
     text-align: center;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
     margin: 2rem 0 1rem 0;
 }
 
-/* Special page links */
+/* Admin panel shortcut link (index page, admin only) */
 a.active[href="admin"] {
     display: block;
     text-align: center;
@@ -137,163 +132,14 @@ a.active[href="admin"]:hover {
     background-color: #d4944a;
 }
 
-/* Modal styling */
-.modal.hidden {
-    display: none;
-}
-
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-}
-
-.modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    width: 300px;
-    max-width: 90%;
-}
-
-.modal-content input[type="text"] {
-    width: 100%;
-    padding: 8px;
-    margin-top: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.checkbox-wrapper {
-    margin-top: 10px;
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-
-.modal-actions button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-}
-
-.modal-actions button:first-child {
-    background-color: #ccc;
-    color: #333;
-}
-
-.modal-actions button:first-child:hover {
-    background-color: #bbb;
-}
-
-.modal-actions button:last-child {
-    background-color: #e3a157;
-    color: white;
-}
-
-.modal-actions button:last-child:hover {
-    background-color: #d4944a;
-}
-
-/* Admin page styling */
-#userInfo {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    margin: 2rem 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
-}
-
-#userInfo h3 {
-    margin: 0 0 1rem 0;
-    text-align: center;
-}
-
-#userInfo input {
-    padding: 8px 12px;
-    border: 2px solid #e3a157;
-    border-radius: 5px;
-    width: 200px;
-    text-align: center;
-}
-
-#userInfo button {
-    padding: 10px 20px;
-    background-color: #e3a157;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-}
-
-#userInfo button:hover {
-    background-color: #d4944a;
-}
-
-#userDisplay,
-#allUsers {
-    text-align: center;
-    margin: 2rem 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
-}
-
-#allUsers h3 {
-    margin-bottom: 1rem;
-}
-
-/* Game components */
-.minesweeper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* Mobile responsiveness */
-@media screen and (max-width: 768px) {
-    nav.topnav ul {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    nav.topnav li {
-        width: 100%;
-        text-align: center;
-    }
-
-    header h1 {
-        font-size: 2rem;
-    }
-
-    #mainContainer {
-        padding: 1rem;
-    }
-}
-
-
-/* Update log */
+/* ─── Update log (index page) ───────────────────────── */
 .update-log {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255,255,255,0.85);
     border-radius: 12px;
     padding: 1.5rem 2rem;
     max-width: 700px;
     margin: 2rem auto;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
 .update-log h2 {
@@ -314,7 +160,7 @@ a.active[href="admin"]:hover {
     display: flex;
     gap: 1rem;
     padding: 0.8rem 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
 .update-log li:last-child {
@@ -331,4 +177,25 @@ a.active[href="admin"]:hover {
 .update-log .entry {
     color: #333;
     line-height: 1.4;
+}
+
+/* ─── Responsive ─────────────────────────────────────── */
+@media screen and (max-width: 768px) {
+    nav.topnav ul {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    nav.topnav li {
+        width: 100%;
+        text-align: center;
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+
+    #mainContainer {
+        padding: 1rem;
+    }
 }

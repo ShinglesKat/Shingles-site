@@ -1,15 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Shingles's Amazing Website</title>
-    <link rel="stylesheet" href="static/css/styles.css" />
-    <link rel="stylesheet" href="static/css/canvas.css">
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon">
-</head>
-<body>
-    {% include "topnav.html" %}
-    
+{% extends "base.html" %}
+
+{% block title %}Shingles's Amazing Website{% endblock %}
+
+{% block extra_head %}
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/canvas.css') }}">
+{% endblock %}
+
+{% block content %}
+
     <div id="tooltip"></div>
+
     <div id="canvasWrapper">
         <div id="canvasContainer">
             <canvas id="canvas" width="750" height="750"></canvas>
@@ -19,6 +20,7 @@
 
     <!-- Controls Below -->
     <div class="control-panel">
+
         <div>
             <label for="colourInput">Set Colour</label><br />
             <input type="color" id="colourInput" />
@@ -30,30 +32,76 @@
         </div>
 
         <div class="preset-colours">
-            <button class="colour-btn" data-colour="#ff0000" style="background: #ff0000;">Red</button>
-            <button class="colour-btn" data-colour="#ffa500" style="background: #ffa500;">Orange</button>
-            <button class="colour-btn" data-colour="#ffff00" style="background: #ffff00;">Yellow</button>
-            <button class="colour-btn" data-colour="#00ff00" style="background: #00ff00;">Green</button>
-            <button class="colour-btn" data-colour="#0000ff" style="background: #0000ff; color: white;">Blue</button>
-            <button class="colour-btn" data-colour="#4b0082" style="background: #4b0082; color: white;">Indigo</button>
-            <button class="colour-btn" data-colour="#ee82ee" style="background: #ee82ee;">Violet</button>
-            <button class="colour-btn" data-colour="#000000" style="background: #000000; color: white;">Black</button>
-            <button class="colour-btn" data-colour="#ffffff" style="background: #ffffff; border: 1px solid #ccc;">White</button>
+            <button class="colour-btn"
+                    data-colour="#ff0000"
+                    style="background: #ff0000;">
+                Red
+            </button>
+
+            <button class="colour-btn"
+                    data-colour="#ffa500"
+                    style="background: #ffa500;">
+                Orange
+            </button>
+
+            <button class="colour-btn"
+                    data-colour="#ffff00"
+                    style="background: #ffff00;">
+                Yellow
+            </button>
+
+            <button class="colour-btn"
+                    data-colour="#00ff00"
+                    style="background: #00ff00;">
+                Green
+            </button>
+
+            <button class="colour-btn"
+                    data-colour="#0000ff"
+                    style="background: #0000ff; color: white;">
+                Blue
+            </button>
+
+            <button class="colour-btn"
+                    data-colour="#4b0082"
+                    style="background: #4b0082; color: white;">
+                Indigo
+            </button>
+
+            <button class="colour-btn"
+                    data-colour="#ee82ee"
+                    style="background: #ee82ee;">
+                Violet
+            </button>
+
+            <button class="colour-btn"
+                    data-colour="#000000"
+                    style="background: #000000; color: white;">
+                Black
+            </button>
+
+            <button class="colour-btn"
+                    data-colour="#ffffff"
+                    style="background: #ffffff; border: 1px solid #ccc;">
+                White
+            </button>
+
             Eyedropper = ctrl + left click :)<br>
             Be good people - Shingles
         </div>
-    </div>
-    
 
+    </div>
 
     <footer>
         {% if session.get('accounttype') == 'admin' %}
             <button id="clearCanvasBtn">Clear Canvas</button>
         {% endif %}
-        
     </footer>
 
-    <script src="static/js/live_pixel_canvas.js" defer></script>
-    <script src="static/js/cross_site_functions.js"></script>
-</body>
-</html>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{{ url_for('static', filename='js/live_pixel_canvas.js') }}"
+            defer>
+    </script>
+{% endblock %}

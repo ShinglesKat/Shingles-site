@@ -1,13 +1,21 @@
-/* Main canvas wrapper - responsive */
+/*
+ * canvas.css — Pixel canvas styles
+ * Used by: canvas.html, live_canvas.html, user_profile.html
+ * Covers: canvas wrapper, grid guide, tooltip, control panel,
+ *         colour buttons, action buttons, and drawing card grids.
+ * The save-canvas modal lives in modal.css.
+ */
+
+/* ─── Canvas wrapper ─────────────────────────────────── */
 #canvasWrapper {
     box-sizing: border-box;
-    width: min(90vw, 780px); /* 90% of viewport width, max 780px */
-    height: min(90vw, 780px); /* Keep it square */
+    width: min(90vw, 780px);
+    height: min(90vw, 780px);
     padding: 10px;
     border: 4px solid #E1F5FE;
     background-color: white;
     margin: 1rem auto;
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 12px rgba(0,0,0,0.1);
     border-radius: 12px;
     overflow: hidden;
     display: flex;
@@ -15,59 +23,46 @@
     align-items: center;
 }
 
-/* Canvas container - responsive */
+/* ─── Canvas container ───────────────────────────────── */
 #canvasContainer {
     position: relative;
     display: block;
     overflow: hidden;
-    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
     background-color: #E1F5FE;
     width: 100%;
     height: 100%;
-    aspect-ratio: 1; /* Keep it square */
+    aspect-ratio: 1;
 }
 
-#drawings {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 20px;
-    justify-items: center;
-    margin: 20px auto;
-    max-width: min(90vw, 1000px);
-    padding: 0 20px;
-}
+/* ─── Canvas element ─────────────────────────────────── */
 #canvas {
     display: block;
     width: 100%;
     height: 100%;
-    
-    /* Prevent dragging */
+
+    /* Prevent drag & selection */
     -webkit-user-drag: none;
     -khtml-user-drag: none;
     -moz-user-drag: none;
     -o-user-drag: none;
     user-drag: none;
-    
-    /* Prevent text selection */
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    
-    /* Prevent context menu on long press (mobile) */
     -webkit-touch-callout: none;
-    
-    /* Additional drag prevention */
+
     pointer-events: auto;
     touch-action: none;
-    
-    /* Smooth scaling */
-    image-rendering: pixelated; /* Keep pixel art crisp */
+
+    /* Keep pixel art crisp */
+    image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
 }
 
-/* Canvas grid guide */
+/* ─── Grid guide overlay ─────────────────────────────── */
 #guide {
     display: grid;
     pointer-events: none;
@@ -78,26 +73,18 @@
     left: 0;
     grid-template-columns: repeat(50, 1fr);
     grid-template-rows: repeat(50, 1fr);
-    
-    /* Prevent dragging on guide as well */
     -webkit-user-drag: none;
-    -khtml-user-drag: none;
     -moz-user-drag: none;
-    -o-user-drag: none;
     user-drag: none;
-    
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    
     -webkit-touch-callout: none;
 }
 
 #guide div {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    
-    /* Prevent dragging on guide cells */
+    border: 1px solid rgba(0,0,0,0.1);
     -webkit-user-drag: none;
     -moz-user-drag: none;
     user-drag: none;
@@ -106,17 +93,17 @@
     user-select: none;
 }
 
-/* Tooltip styling */
+/* ─── Hover tooltip (live canvas) ───────────────────── */
 #tooltip {
     position: absolute;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0,0,0,0.75);
     color: white;
     padding: 6px 10px;
     border-radius: 8px;
     font-size: 12px;
     z-index: 1000;
     max-width: 200px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     transition: opacity 0.3s ease;
 }
 
@@ -136,7 +123,7 @@
     background-color: #d28e3c;
 }
 
-/* Control panel - responsive */
+/* ─── Control panel ──────────────────────────────────── */
 .control-panel {
     display: flex;
     align-items: center;
@@ -151,7 +138,7 @@
     max-width: min(90vw, 1400px);
 }
 
-/* Canvas action buttons (Clear, Save, Load) */
+/* ─── Action button row (Clear / Save / Load) ────────── */
 .canvas-button-wrapper {
     display: flex;
     justify-content: center;
@@ -161,23 +148,8 @@
     flex-wrap: wrap;
 }
 
-.canvas-button-wrapper button {
-    padding: 10px 20px;
-    background-color: #e3a157;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-}
-
-.canvas-button-wrapper button:hover {
-    background-color: #d28e3c;
-}
-
-/* Alternative button styling */
 .canvas-action-btn {
+    display: inline-block;
     background-color: #444;
     color: white;
     border: none;
@@ -186,6 +158,7 @@
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
+    text-decoration: none;
     transition: background-color 0.2s ease;
 }
 
@@ -193,23 +166,7 @@
     background-color: #666;
 }
 
-/* Color preset buttons */
-.colour-btn {
-    padding: 10px 16px;
-    border: none;
-    cursor: pointer;
-    border-radius: 8px;
-    background-color: #e3a157;
-    color: white;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-}
-
-.colour-btn:hover {
-    background-color: #d28e3c;
-}
-
-/* Preset colors container */
+/* ─── Colour preset buttons ──────────────────────────── */
 .preset-colours {
     display: flex;
     gap: 0.5rem;
@@ -218,44 +175,22 @@
     justify-content: center;
 }
 
-/* Multiplayer link styling */
-.active[href="live_canvas"] {
-    display: block;
-    text-align: center;
-    margin: 1rem auto;
-    width: fit-content;
-    padding: 10px 20px;
-    background-color: #e3a157;
-    color: white !important;
-    text-decoration: none;
+.colour-btn {
+    padding: 10px 16px;
+    border: none;
+    cursor: pointer;
     border-radius: 8px;
     font-weight: bold;
-    transition: background-color 0.3s ease;
+    transition: opacity 0.2s ease;
 }
 
-.active[href="live_canvas"]:hover {
-    background-color: #d28e3c;
+.colour-btn:hover {
+    opacity: 0.8;
 }
 
-/* Page headings */
-main h3 {
-    text-align: center;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;: 'Baloo 2', cursive;
-    margin: 2rem 0 1rem 0;
-}
-
-/* Recent drawings grid */
-#recentDrawings {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 20px;
-    justify-items: center;
-    margin: 20px auto;
-    max-width: min(90vw, 1000px);
-    padding: 0 20px;
-}
-
-/* All older drawings grid */
+/* ─── Drawing card grids ─────────────────────────────── */
+#drawings,
+#recentDrawings,
 #allOlderDrawings {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -266,7 +201,7 @@ main h3 {
     padding: 0 20px;
 }
 
-/* Individual drawing containers */
+/* ─── Individual drawing card ────────────────────────── */
 .drawing-container {
     display: flex;
     flex-direction: column;
@@ -277,13 +212,13 @@ main h3 {
     border: 1px solid #ddd;
     background-color: #E1F5FE;
     border-radius: 12px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .drawing-container:hover {
     transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .drawing-container canvas {
@@ -308,30 +243,28 @@ main h3 {
     margin: 0 0 8px;
 }
 
-/* Mobile and tablet responsiveness */
+/* ─── Responsive ─────────────────────────────────────── */
 @media screen and (max-width: 768px) {
     #canvasWrapper {
         width: min(95vw, 500px);
         height: min(95vw, 500px);
         padding: 8px;
     }
-    
+
     .control-panel {
         flex-direction: column;
         align-items: center;
         width: min(95vw, 500px);
         margin: 1rem auto;
     }
-    
-    .preset-colours {
-        gap: 0.3rem;
-    }
-    
+
+    .preset-colours { gap: 0.3rem; }
+
     .colour-btn {
         padding: 8px 12px;
         font-size: 12px;
     }
-    
+
     #colourInput {
         width: 60px;
         height: 40px;
@@ -344,20 +277,18 @@ main h3 {
         height: min(98vw, 350px);
         padding: 5px;
     }
-    
+
     .control-panel {
         width: min(98vw, 350px);
         padding: 8px;
     }
-    
+
     .colour-btn {
         padding: 6px 10px;
         font-size: 11px;
     }
 }
 
-
-/* Very large screens */
 @media screen and (min-width: 1200px) {
     #canvasWrapper {
         width: min(60vw, 800px);
