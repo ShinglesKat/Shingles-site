@@ -8,31 +8,31 @@
 
 /* ─── Canvas wrapper ─────────────────────────────────── */
 #canvasWrapper {
-    box-sizing: border-box;
-    width: min(90vw, 780px);
-    height: min(90vw, 780px);
-    padding: 10px;
+    aspect-ratio: 1;
+    width: 780px;
+    height: 780px;
+    flex-shrink: 0;
+    padding: 2px;
     border: 4px solid #E1F5FE;
-    background-color: white;
-    margin: 1rem auto;
+    background: white;
     box-shadow: 0 0 12px rgba(0,0,0,0.1);
     border-radius: 12px;
     overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
+    box-sizing: border-box;
+    margin: 1rem auto;
 }
-
 /* ─── Canvas container ───────────────────────────────── */
 #canvasContainer {
     position: relative;
-    display: block;
-    overflow: hidden;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
-    background-color: #E1F5FE;
     width: 100%;
     height: 100%;
     aspect-ratio: 1;
+    overflow: hidden;
+    background: #E1F5FE;
+    box-shadow: inset 0 0 8px rgba(0,0,0,0.05);
 }
 
 /* ─── Canvas element ─────────────────────────────────── */
@@ -40,23 +40,11 @@
     display: block;
     width: 100%;
     height: 100%;
-
-    /* Prevent drag & selection */
-    -webkit-user-drag: none;
-    -khtml-user-drag: none;
-    -moz-user-drag: none;
-    -o-user-drag: none;
-    user-drag: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-
     pointer-events: auto;
     touch-action: none;
-
-    /* Keep pixel art crisp */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -64,33 +52,17 @@
 
 /* ─── Grid guide overlay ─────────────────────────────── */
 #guide {
-    display: grid;
-    pointer-events: none;
     position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
+    inset: 0;
+    display: grid;
     grid-template-columns: repeat(50, 1fr);
     grid-template-rows: repeat(50, 1fr);
-    -webkit-user-drag: none;
-    -moz-user-drag: none;
-    user-drag: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+    pointer-events: none;
     user-select: none;
-    -webkit-touch-callout: none;
 }
 
 #guide div {
     border: 1px solid rgba(0,0,0,0.1);
-    -webkit-user-drag: none;
-    -moz-user-drag: none;
-    user-drag: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
 }
 
 /* ─── Hover tooltip (live canvas) ───────────────────── */
@@ -244,13 +216,7 @@
 }
 
 /* ─── Responsive ─────────────────────────────────────── */
-@media screen and (max-width: 768px) {
-    #canvasWrapper {
-        width: min(95vw, 500px);
-        height: min(95vw, 500px);
-        padding: 8px;
-    }
-
+@media (max-width: 768px) {
     .control-panel {
         flex-direction: column;
         align-items: center;
@@ -271,12 +237,7 @@
     }
 }
 
-@media screen and (max-width: 480px) {
-    #canvasWrapper {
-        width: min(98vw, 350px);
-        height: min(98vw, 350px);
-        padding: 5px;
-    }
+@media (max-width: 480px) {
 
     .control-panel {
         width: min(98vw, 350px);
@@ -286,12 +247,5 @@
     .colour-btn {
         padding: 6px 10px;
         font-size: 11px;
-    }
-}
-
-@media screen and (min-width: 1200px) {
-    #canvasWrapper {
-        width: min(60vw, 800px);
-        height: min(60vw, 800px);
     }
 }
