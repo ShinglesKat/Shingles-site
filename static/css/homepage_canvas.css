@@ -3,8 +3,8 @@
  */
 #canvasWrapper {
     aspect-ratio: 1;
-    width: 900px;
-    height: 900px;
+    height: 100%;
+    width: auto;
     flex-shrink: 0;
     padding: 2px;
     border: 4px solid #E1F5FE;

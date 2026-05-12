@@ -414,12 +414,6 @@ function clearCanvas() {
         }).catch(err => console.error("Error clearing canvas on server:", err));
 }
 
-window.addEventListener('resize', () => {
-    setTimeout(() => {
-        refreshCanvasFromServer();
-    }, 100);
-});
-
 document.addEventListener("click", (e) => {
     const clickedInsideTooltip = tooltip.contains(e.target);
     if (!clickedInsideTooltip) {
