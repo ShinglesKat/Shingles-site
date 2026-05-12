@@ -3,7 +3,6 @@ async function add_message(event) {
 
     const username = document.getElementById('nameInput').value;
     const content = document.getElementById('messageInput').value;
-
     try {
         const response = await fetch("/messages/post_message", {
             method: "POST",
@@ -61,97 +60,13 @@ setInterval(() => {
     });
 }, 5000);
 
-async function retrieve_messages(){
-    try {
-        const response = await fetch("/messages/get_messages");
-        if (!response.ok) {
-            throw new Error(`Response status: ${response.status}`);
-        }
-        const json = await response.json();
-        const messageList = document.getElementById('messageList');
-        messageList.innerHTML = '';
-        json.forEach(msg => {
-            const li = document.createElement('li');
-            li.textContent = `${msg.username}: ${msg.content}`;
-            messageList.appendChild(li);
-        });
-    } catch (error) {
-        console.error("Error retrieving messages:", error.message);
-    }
-}
-
-let sessionCache = null;
-
-async function checkSession() {
-    try {
-        const response = await fetch('/get_session_data');
-        if (response.ok) {
-            sessionCache = await response.json();
-            console.log('Session cached:', sessionCache);
-        } else if (response.status === 401) {
-            console.log('User not logged in');
-            sessionCache = { accounttype: null };
-        } else {
-            console.log('Session check failed, assuming no admin privileges');
-            sessionCache = { accounttype: null };
-        }
-    } catch (error) {
-        console.error('Error checking session:', error);
-        sessionCache = { accounttype: null };
-    }
-}
-
-function banUserFromMessage(ip) {
-    console.log('banUserFromMessage called with IP:', ip);
-    console.log('Current sessionCache:', sessionCache);
-    
-    if (!sessionCache || sessionCache.accounttype !== 'admin') {
-        console.log('Permission denied - not admin or no session');
+async function banUserFromMessage(ip) {
+    const session = await getSessionData();
+    if (!session || session.accounttype !== 'admin') {
         alert('You do not have permission to ban users.');
         return;
     }
-    
-    const duration = prompt("How long should the user be banned for? ('1h', '24h', '7d'):");
-    if (!duration) {
-        console.log('Ban cancelled - no duration provided');
-        return;
-    }
-
-    const message = prompt("Enter a reason for the ban:");
-    if (message === null) {
-        console.log('Ban cancelled - no reason provided');
-        return;
-    }
-
-    console.log('Sending ban request:', { ip, reason: message, ban_duration: duration });
-
-    fetch("/admin/ban_ip", {
-        method: "POST",
-        headers: { 
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ ip, reason: message, ban_duration: duration })
-    })
-    .then(res => {
-        console.log('Ban response status:', res.status);
-        if (res.ok) {
-            return res.json().then(data => {
-                console.log('Ban success:', data);
-                alert("User banned successfully.");
-            });
-        } else {
-            return res.json().then(data => {
-                console.error('Ban failed:', data);
-                alert(`Failed to ban user: ${data.error || 'Unknown error'}`);
-            }).catch(() => {
-                alert(`Failed to ban user. Status: ${res.status}`);
-            });
-        }
-    })
-    .catch(err => {
-        console.error("Ban error:", err);
-        alert("Error banning user: " + err.message);
-    });
+    banUserByIp(ip);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -160,16 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
         commentForm.addEventListener('submit', add_message);
     }
     
-    checkSession();
-    
     fetchMessages();
     setInterval(fetchMessages, 1000);
 });
-
-function showLoadingMessage() {
-    const messageList = document.getElementById('messageList');
-    messageList.innerHTML = '<li>Loading messages...</li>';
-}
 
 function diffMessages(newMessages) {
     const messageList = document.getElementById('messageList');
@@ -219,7 +127,6 @@ function attachEventListeners(li, msg) {
         if (banBtn) {
             banBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('Ban button clicked for IP:', msg.ip_address);
                 banUserFromMessage(msg.ip_address);
             });
         }

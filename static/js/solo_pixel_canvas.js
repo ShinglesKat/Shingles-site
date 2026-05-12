@@ -221,18 +221,8 @@ document.querySelectorAll(".colour-btn").forEach(btn => {
     });
 });
 
-function attachButtonListener(button, eventType, callback) {
-    if (button) {
-        button.addEventListener(eventType, callback);
-    }
-}
-
-const clearCanvasButton = document.getElementById("clearCanvasBtn");
-const saveCanvasButton = document.getElementById("saveCanvasBtn");
-const loadCanvasButton = document.getElementById("loadCanvasBtn"); 
-
-attachButtonListener(clearCanvasButton, "click", clearCanvas);
-attachButtonListener(saveCanvasButton, "click", saveCanvasData);
+document.getElementById("clearCanvasBtn")?.addEventListener("click", clearCanvas);
+document.getElementById("saveCanvasBtn")?.addEventListener("click", saveCanvasData);
 // attachButtonListener(loadCanvasButton, "click", showLoadDrawingModal);
 
 function clearCanvas() {
@@ -294,12 +284,11 @@ async function saveCanvasData() {
 
     try {
         // Check session first
-        const sessionResponse = await fetch('/get_session_data');
-        if (!sessionResponse.ok) {
+        const sessionData = await getSessionData();
+        if (!sessionData) {
             throw new Error("You must be logged in to do that!");
         }
 
-        const sessionData = await sessionResponse.json();
         const { userid, username } = sessionData;
 
         // Show modal to get piece name and privacy setting

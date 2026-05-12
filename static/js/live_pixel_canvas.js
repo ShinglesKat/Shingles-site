@@ -18,14 +18,12 @@ const colourHistory = {};
 const ipHistory = {};
 const pendingUpdates = {};
 const batchBuffer = [];
-const BATCH_SEND_INTERVAL = 500; // Send batched updates every 500ms
+const BATCH_SEND_INTERVAL = 500;
 
-let lastHoveredCell = { x: -1, y: -1 }; // To keep track of the previously hovered cell
+let lastHoveredCell = { x: -1, y: -1 };
 
-//Set default colour
 colourInput.value = "#009578";
 
-//Init canvas background colour
 drawingContext.fillStyle = "#ffffff";
 drawingContext.fillRect(0, 0, canvas.width, canvas.height);
 for (let i = 0; i < CELL_SIDE_COUNT; i++) {
@@ -171,7 +169,7 @@ function handleCanvasMousedown(e) {
         fillCell(cellX, cellY);
     }
 
-    console.log(`Cell: (${cellX}, ${cellY})`);
+    //console.log(`Cell: (${cellX}, ${cellY})`);
 }
 
 function handleToggleGuideChange() {
@@ -193,13 +191,10 @@ function fillCell(cellX, cellY) {
 
     pendingUpdates[key] = colourInput.value;
 
-    // Add to batch buffer instead of sending immediately
     const existingIndex = batchBuffer.findIndex(update => update.x === cellX && update.y === cellY);
     if (existingIndex !== -1) {
-        // Update existing entry in batch
         batchBuffer[existingIndex].colour = colourInput.value;
     } else {
-        // Add new entry to batch
         batchBuffer.push({x: cellX, y: cellY, colour: colourInput.value});
     }
 }
@@ -210,7 +205,7 @@ function sendBatchUpdate() {
     }
 
     const updatesToSend = [...batchBuffer];
-    batchBuffer.length = 0; // Clear the buffer
+    batchBuffer.length = 0;
 
     fetch("/multiplayer/canvas/update", {
         method: "POST",
@@ -227,7 +222,6 @@ function sendBatchUpdate() {
         })
         .then(data => {
             console.log(`Batch updated ${updatesToSend.length} pixel(s) successfully`);
-            // Clear pending updates for successfully sent pixels
             updatesToSend.forEach(update => {
                 const key = `${update.x}_${update.y}`;
                 delete pendingUpdates[key];
@@ -239,7 +233,6 @@ function sendBatchUpdate() {
             if (err.message.includes("banned") || err.message.includes("Ban")) {
                 isBanned = true;
 
-                // Revert all pixels in the failed batch
                 updatesToSend.forEach(update => {
                     const key = `${update.x}_${update.y}`;
                     const startX = update.x * cellPixelLength;
@@ -254,7 +247,6 @@ function sendBatchUpdate() {
 
                 alert(err.message);
             } else {
-                // For other errors, clear pending updates and refresh from server
                 updatesToSend.forEach(update => {
                     const key = `${update.x}_${update.y}`;
                     delete pendingUpdates[key];
@@ -266,7 +258,6 @@ function sendBatchUpdate() {
 
 function refreshCanvasFromServer() {
     if (isDrawing) {
-        //Don't refresh while drawing
         return;
     }
 
@@ -282,7 +273,6 @@ function refreshCanvasFromServer() {
                         const {colour} = pixelData;
                         const ip = pixelData.ip_address;
 
-                        // Don't overwrite pending updates or hovered cells
                         if (colour !== colourHistory[key] && 
                             !pendingUpdates[key] && 
                             !(x === lastHoveredCell.x && y === lastHoveredCell.y)) {
@@ -373,90 +363,39 @@ canvas.addEventListener("mouseleave", () => {
 
 toggleGuide.addEventListener("change", handleToggleGuideChange);
 
-//Poll server for update every second and half :>
 setInterval(refreshCanvasFromServer, 1500);
-
-//Send batched updates periodically
 setInterval(sendBatchUpdate, BATCH_SEND_INTERVAL);
 
-//Admin stuff
-const clearCanvasButton = document.getElementById("clearCanvasBtn");
-if (clearCanvasButton) {
-    clearCanvasButton.addEventListener("click", () => {
-        clearCanvas();
-    })
-}
+document.getElementById("clearCanvasBtn")?.addEventListener("click", clearCanvas);
 
-//init tooltip for pixels
 const tooltip = document.getElementById("tooltip");
 
-let canvasSessionCache = null;
+async function showTooltip(content, clientX, clientY, ip) {
+    const session = await getSessionData();
+    const isAdmin = session?.accounttype === 'admin';
 
-function showTooltip(content, clientX, clientY, ip) {
-    const renderTooltip = (isAdmin) => {
-        tooltip.innerHTML = `
-            <div>${content}</div>
-            ${isAdmin ? `<div>IP: ${ip}</div>` : ''}
-            ${isAdmin ? `<button id="tooltip-btn">Ban user</button>` : ''}
-        `;
-        tooltip.style.display = "block";
-        tooltip.style.left = `${clientX + window.scrollX + 10}px`;
-        tooltip.style.top = `${clientY + window.scrollY + 10}px`;
+    tooltip.innerHTML = `
+        <div>${content}</div>
+        ${isAdmin ? `<div>IP: ${ip}</div>` : ''}
+        ${isAdmin ? `<button id="tooltip-btn">Ban user</button>` : ''}
+    `;
+    tooltip.style.display = "block";
+    tooltip.style.left = `${clientX + window.scrollX + 10}px`;
+    tooltip.style.top = `${clientY + window.scrollY + 10}px`;
 
-        if (isAdmin) {
-            document.getElementById("tooltip-btn").addEventListener("click", () => {
-                const duration = prompt("How long should the user be banned for? ('1h', '24h', '7d'):");
-                if (!duration) {
-                    return;
-                }
-
-                const message = prompt("Enter a reason for the ban:");
-                if (message === null) {
-                    return;
-                }
-
-                fetch("/admin/ban_ip", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ ip, reason: message, ban_duration: duration })
-                })
-                .then(res => {
-                    if (res.ok) {
-                        alert("User banned successfully.");
-                    } else {
-                        alert("Failed to ban user.");
-                    }
-                })
-                .catch(err => {
-                    console.error("Ban error:", err);
-                    alert("Error banning user.");
-                });
-            });
-        }
-    };
-
-    if (sessionCache) {
-        renderTooltip(sessionCache.accounttype === 'admin');
-    } else {
-        fetch('/get_session_data')
-            .then(res => res.ok ? res.json() : Promise.reject('Not logged in'))
-            .then(data => {
-                sessionCache = data;
-                renderTooltip(data.accounttype === 'admin');
-            })
-            .catch(err => {
-                console.warn("Could not fetch session data:", err);
-                renderTooltip(false);
-            });
+    if (isAdmin) {
+        document.getElementById("tooltip-btn").addEventListener("click", () => {
+            banUserByIp(ip);
+        });
     }
 }
 
 function hideTooltip() {
     tooltip.style.display = "none";
 }
-//Hide tooltip on load
-hideTooltip()
-//clears the canvas on client side, make request to server
+
+hideTooltip();
+
 function clearCanvas() {
     drawingContext.fillStyle = "#ffffff";
     drawingContext.fillRect(0, 0, canvas.width, canvas.height);
@@ -483,7 +422,6 @@ window.addEventListener('resize', () => {
 
 document.addEventListener("click", (e) => {
     const clickedInsideTooltip = tooltip.contains(e.target);
-
     if (!clickedInsideTooltip) {
         hideTooltip();
     }

@@ -5,14 +5,6 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/homepage_canvas.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/homepage_chatroom.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/homepage_colours.css') }}">
-<style>
-@media screen and (min-width: 769px) {
-    html, body {
-        overflow: hidden;
-        height: 100%;
-    }
-}
-</style>
 {% endblock %}
 {% block content %}
 <div id="tooltip"></div>
@@ -73,5 +65,4 @@
 {% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/live_pixel_canvas.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/messages.js') }}"></script>
-<script src="{{ url_for('static', filename='js/cross_site_functions.js') }}"></script>
 {% endblock %}
