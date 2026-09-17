@@ -1,4 +1,4 @@
-async function add_message(event) {
+async function addMessage(event) {
     event.preventDefault();
 
     const username = document.getElementById('nameInput').value;
@@ -72,7 +72,7 @@ async function banUserFromMessage(ip) {
 document.addEventListener('DOMContentLoaded', () => {
     const commentForm = document.getElementById('commentForm');
     if (commentForm) {
-        commentForm.addEventListener('submit', add_message);
+        commentForm.addEventListener('submit', addMessage);
     }
     
     fetchMessages();

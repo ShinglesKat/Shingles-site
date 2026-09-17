@@ -1,4 +1,4 @@
-async function register_account(event) {
+async function registerAccount(event) {
     event.preventDefault();
     const username = document.getElementById('registerUsernameInput').value.trim();
     const password = document.getElementById('registerPasswordInput').value.trim();
@@ -30,7 +30,7 @@ async function register_account(event) {
     }
 }
 
-async function attempt_login(event) {
+async function attemptLogin(event) {
     event.preventDefault();
     const username = document.getElementById('loginUsernameInput').value.trim();
     const password = document.getElementById('loginPasswordInput').value.trim();
@@ -58,11 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const registerForm = document.getElementById('registerForm');
 
     if (loginForm) {
-        loginForm.addEventListener('submit', attempt_login);
+        loginForm.addEventListener('submit', attemptLogin);
     }
 
     if (registerForm) {
-        registerForm.addEventListener('submit', register_account);
+        registerForm.addEventListener('submit', registerAccount);
     }
 });
 

@@ -26,7 +26,7 @@
     text-align: center;
 }
 
-#userInfo button {
+button {
     padding: 10px 20px;
     background-color: #e3a157;
     color: white;
@@ -37,7 +37,7 @@
     transition: background-color 0.3s ease;
 }
 
-#userInfo button:hover {
+button:hover {
     background-color: #d4944a;
 }
 

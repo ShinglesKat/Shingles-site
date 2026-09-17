@@ -1,4 +1,4 @@
-async function fetch_user(event) {
+async function fetchUserData(event) {
     event.preventDefault();
     const userId = document.getElementById('IDInput').value.trim();
     const userUsername = document.getElementById('loginUsernameInput').value.trim();
@@ -75,5 +75,9 @@ async function saveUserChanges() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('userInfo').addEventListener('submit', fetch_user);
+    document.getElementById('userInfo').addEventListener('submit', fetchUserData);
+
+    document.getElementById('banBtn').addEventListener('click', () => {
+        banUserByIp(null); // triggers the prompt() fallback for IP
+    });
 });

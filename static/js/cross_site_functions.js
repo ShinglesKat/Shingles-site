@@ -84,6 +84,14 @@ async function hashPassword(password) {
 // ─── Ban user by IP ──────────────────────────────────────────────────────────
 
 function banUserByIp(ip) {
+    if (!ip) {
+        ip = prompt("Enter the IP to ban");
+        if (!ip) {
+            console.log('Ban cancelled - no IP provided');
+            return;
+        }
+    }
+
     const duration = prompt("How long should the user be banned for? ('1h', '24h', '7d'):");
     if (!duration) {
         console.log('Ban cancelled - no duration provided');
@@ -124,3 +132,4 @@ function banUserByIp(ip) {
         alert("Error banning user: " + err.message);
     });
 }
+
