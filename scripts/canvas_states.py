@@ -1,4 +1,4 @@
-from scripts.config import DEFAULT_COLOUR, CELL_SIDE_COUNT
+from config import DEFAULT_COLOUR, CELL_SIDE_COUNT
 
 pendingUpdates = []
 pixelArray = [

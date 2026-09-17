@@ -10,9 +10,8 @@ import sqlite3
 import time
 from threading import Thread
 
-from config import CELL_SIDE_COUNT, SAVE_INTERVAL
+from config import CELL_SIDE_COUNT, SAVE_INTERVAL, DEFAULT_COLOUR
 from scripts import canvas_states
-from scripts.config import DEFAULT_COLOUR
 from scripts.utils_misc import get_db_connection
 
 # ---------------------------------------------------------------------------

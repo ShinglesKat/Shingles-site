@@ -3,7 +3,7 @@ from flask_wtf import CSRFProtect
 from flask_talisman import Talisman
 from dotenv import load_dotenv
 
-from config import CELL_SIDE_COUNT, SECRET_KEY
+from config import CELL_SIDE_COUNT, SECRET_KEY, DEBUG
 from scripts.utils_databases import (
     database_bp,
     init_db,
@@ -117,5 +117,5 @@ init_flush_thread()
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=DEBUG)
 
