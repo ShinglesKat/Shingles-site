@@ -7,7 +7,6 @@ from scripts.utils_misc import get_db_connection, parse_duration
 
 admin_bp = Blueprint('admin_bp', __name__)
 
-
 @admin_bp.route('/ban_ip', methods=['POST'])
 def ban_ip():
     if session.get('accounttype') != 'admin':
@@ -54,7 +53,30 @@ def ban_ip():
     finally:
         conn.close()
 
+@admin_bp.route('/unban_ip', methods=['POST'])
+def unban_ip():
+    if session.get('accounttype') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
 
+    data = request.get_json()
+    ip = data.get('ip')
+
+    if not ip:
+        return jsonify({'error': 'Missing IP'}), 400
+
+    conn = get_db_connection('bannedips.db')
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("DELETE FROM bannedIPs WHERE ip = ?", (ip,))
+        conn.commit()
+        return jsonify({'status': f'Unbanned {ip}'}), 200
+    except sqlite3.Error as e:
+        conn.rollback()
+        return jsonify({'error': f'Database operation failed: {str(e)}'}), 500
+    finally:
+        conn.close()
+        
 @admin_bp.route('/userinfo')
 def api_get_userinfo():
     user_id = request.args.get('id')
@@ -107,3 +129,19 @@ def update_user():
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
+
+@admin_bp.route('/all_banned_users', methods=['GET'])
+def get_all_banned_users():
+    if session.get('accounttype') != 'admin':
+        return jsonify({'error': 'Access denied'}), 403
+
+    conn = get_db_connection('bannedips.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM bannedIPs")
+
+    banned_users = cursor.fetchall()
+    conn.close()
+
+    banned_list = [dict(row) for row in banned_users]
+
+    return jsonify(banned_list)

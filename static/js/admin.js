@@ -74,10 +74,89 @@ async function saveUserChanges() {
     }
 }
 
+async function getAllBannedUsers(){
+    try {
+        const response = await fetch('/admin/all_banned_users');
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        renderBannedUsers(data);
+
+    } catch (error) {
+        console.error('Error fetching banned users:', error.message);
+    }
+}
+
+function renderBannedUsers(bans) {
+    const container = document.getElementById('messageList');
+    container.innerHTML = '';
+
+    if (bans.length === 0) {
+        container.textContent = 'No banned IPs.';
+        return;
+    }
+
+    bans.forEach(ban => {
+        const row = document.createElement('div');
+
+        const text = document.createElement('span');
+        text.textContent = `${ban.ip} - ${ban.reason} - (expires: ${ban.ban_expires_at})`;
+        row.appendChild(text);
+
+        const unbanBtn = document.createElement('button');
+        unbanBtn.type = 'button';
+        unbanBtn.textContent = 'Cleanse ban';
+        unbanBtn.style.marginLeft = '10px';
+        unbanBtn.addEventListener('click', () => unbanIp(ban.ip));
+        row.appendChild(unbanBtn);
+
+        container.appendChild(row);
+    });
+}
+
+function confirmUnban(ip) {
+    return confirm(`Are you sure you want to unban ${ip}?`);
+}
+
+async function unbanIp(ip) {
+    if (!confirmUnban(ip)) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/admin/unban_ip', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ip })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Status: ${response.status}`);
+        }
+
+        await response.json();
+        getAllBannedUsers(); // refresh the list so the removed row disappears
+
+    } catch (error) {
+        console.error('Error unbanning IP:', error.message);
+        alert('Failed to unban: ' + error.message);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('userInfo').addEventListener('submit', fetchUserData);
 
     document.getElementById('banBtn').addEventListener('click', () => {
         banUserByIp(null); // triggers the prompt() fallback for IP
     });
+
+    document.getElementById('getAllBannedUsersBtn').addEventListener('click', () => {
+        getAllBannedUsers();
+    });
 });
+
