@@ -12,16 +12,25 @@ message_board_bp = Blueprint('message_board_bp', __name__)
 def get_messages():
     conn = get_db_connection('database.db')
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM messages ORDER BY created DESC')
+
+    if session.get('accounttype') == 'admin':
+        cursor.execute('SELECT * FROM messages ORDER BY created DESC')
+    else:
+        cursor.execute(
+            'SELECT id, created, username, content FROM messages ORDER BY created DESC'
+        )
+
     messages = cursor.fetchall()
     conn.close()
 
     messages_list = []
     for msg in messages:
         msg_dict = dict(msg)
+
         if session.get('accounttype') == 'admin':
             msg_dict['can_delete'] = True
             msg_dict['can_ban'] = True
+
         messages_list.append(msg_dict)
 
     return jsonify(messages_list)

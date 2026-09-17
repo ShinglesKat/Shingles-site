@@ -11,7 +11,24 @@ multiplayer_canvas_bp = Blueprint('multiplayer_canvas_bp', __name__)
 
 @multiplayer_canvas_bp.route('/canvas', methods=['GET'])
 def get_pixel_array():
-    return jsonify(canvas_states.pixelArray)
+    is_admin = session.get('accounttype') == 'admin'
+
+    pixel_array = []
+
+    for row in canvas_states.pixelArray:
+        new_row = []
+
+        for pixel in row:
+            pixel_data = {'colour': pixel['colour']}
+
+            if is_admin:
+                pixel_data['ip_address'] = pixel['ip_address']
+
+            new_row.append(pixel_data)
+
+        pixel_array.append(new_row)
+
+    return jsonify(pixel_array)
 
 
 @multiplayer_canvas_bp.route('/canvas/clear', methods=['POST'])
