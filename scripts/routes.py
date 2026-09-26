@@ -15,10 +15,7 @@ def favicon():
     return send_from_directory('static/images', 'favicon.ico')
 
 
-# ---------------------------------------------------------------------------
 # General pages
-# ---------------------------------------------------------------------------
-
 @routes_bp.route('/')
 def home():
     return render_template('index.html')
@@ -37,10 +34,7 @@ def render_message_page():
 def render_homepage():
     return render_template('new_homepage.html')
 
-# ---------------------------------------------------------------------------
 # Canvas & Drawing pages
-# ---------------------------------------------------------------------------
-
 @routes_bp.route('/canvas')
 def render_canvas_landing_page():
     return render_template('canvas.html')
@@ -87,10 +81,7 @@ def render_user_drawing_page():
     )
 
 
-# ---------------------------------------------------------------------------
 # User profile pages
-# ---------------------------------------------------------------------------
-
 @routes_bp.route('/user')
 def render_user_profile_page():
     user_id = request.args.get('id')
@@ -109,10 +100,7 @@ def render_user_profile_page():
     return render_template('user_profile.html', user=user)
 
 
-# ---------------------------------------------------------------------------
 # Admin pages
-# ---------------------------------------------------------------------------
-
 @routes_bp.route('/admin', methods=['GET'])
 def render_admin_panel_page():
     if session.get('accounttype') != 'admin':
@@ -127,10 +115,7 @@ def render_admin_panel_page():
     return render_template('admin.html', users=users)
 
 
-# ---------------------------------------------------------------------------
 # Special routes
-# ---------------------------------------------------------------------------
-
 @routes_bp.route('/freeview')
 def freeview_redirect():
     resp = requests.get(FREEVIEW_PAGE)

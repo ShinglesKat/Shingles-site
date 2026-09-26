@@ -8,11 +8,18 @@ from config import CELL_SIDE_COUNT
 database_bp = Blueprint('databases', __name__)
 
 
-# ---------------------------------------------------------------------------
-# Generic database initialiser
-# ---------------------------------------------------------------------------
+def _table_exists(connection, table_name):
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+        (table_name,),
+    )
+    return cursor.fetchone() is not None
 
-def init_database(db_name, initialization_func=None):
+
+# Generic database initialiser
+
+def init_database(db_name, initialization_func=None, check_table=None):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     databases_dir = os.path.join(script_dir, '../databases')
     os.makedirs(databases_dir, exist_ok=True)
@@ -20,12 +27,16 @@ def init_database(db_name, initialization_func=None):
 
     print(f"[DB Init] Checking database: {db_name}")
     print(f"[DB Init] Full path: {db_path}")
-    print(f"[DB Init] Database exists: {os.path.exists(db_path)}")
 
-    if not os.path.exists(db_path):
-        print(f"[DB Init] {db_name} not found, initializing...")
-        connection = sqlite3.connect(db_path)
-        try:
+    connection = sqlite3.connect(db_path)
+    try:
+        needs_init = True
+        if check_table:
+            needs_init = not _table_exists(connection, check_table)
+
+        print(f"[DB Init] {db_name} needs schema init: {needs_init}")
+
+        if needs_init:
             schema_path = os.path.join(script_dir, '../schema.sql')
             print(f"[DB Init] Loading schema from: {schema_path}")
             with open(schema_path, 'r') as f:
@@ -34,36 +45,33 @@ def init_database(db_name, initialization_func=None):
                 connection.executescript(schema_content)
             print("[DB Init] Schema executed successfully")
 
-            cursor = connection.cursor()
             if initialization_func:
                 print(f"[DB Init] Running initialization function: {initialization_func.__name__}")
-                initialization_func(cursor)
+                initialization_func(connection.cursor())
                 print("[DB Init] Initialization function completed")
             else:
                 print("[DB Init] No initialization function provided")
 
             connection.commit()
             print(f"[DB Init] Database {db_name} initialized successfully")
+        else:
+            print(f"[DB Init] {db_name} already initialized, skipping.")
 
-        except sqlite3.Error as e:
-            print(f"[DB Init ERROR] SQLite error: {e}")
-        except FileNotFoundError as e:
-            print(f"[DB Init ERROR] Schema file not found: {e}")
-        except Exception as e:
-            print(f"[DB Init ERROR] Unexpected error: {e}")
-        finally:
-            connection.close()
-            print("[DB Init] Connection closed")
-    else:
-        print(f"[DB Init] {db_name} already exists, skipping initialization.")
+    except sqlite3.Error as e:
+        print(f"[DB Init ERROR] SQLite error: {e}")
+    except FileNotFoundError as e:
+        print(f"[DB Init ERROR] Schema file not found: {e}")
+    except Exception as e:
+        print(f"[DB Init ERROR] Unexpected error: {e}")
+    finally:
+        connection.close()
+        print("[DB Init] Connection closed")
 
 
-# ---------------------------------------------------------------------------
 # Per-database init helpers
-# ---------------------------------------------------------------------------
 
 def init_db():
-    init_database('database.db')
+    init_database('database.db', check_table='messages')
 
 
 def init_pixel_db():
@@ -83,16 +91,16 @@ def init_pixel_db():
         else:
             print(f"Canvas contains {count} pixels. Skipping default initialization.")
 
-    init_database('pixels.db', setup_pixels)
+    init_database('pixels.db', setup_pixels, check_table='pixels')
 
 
 def init_userinfo_db():
-    init_database('userinfo.db')
+    init_database('userinfo.db', check_table='userinfo')
 
 
 def init_userdrawings_db():
-    init_database('userdrawings.db')
+    init_database('userdrawings.db', check_table='userdrawings')
 
 
 def init_bannedips_db():
-    init_database('bannedips.db')
+    init_database('bannedips.db', check_table='bannedIPs')

@@ -1,4 +1,4 @@
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     username TEXT CHECK (LENGTH(username) > 1 AND LENGTH(username) < 17),
@@ -6,7 +6,7 @@ CREATE TABLE messages (
     ip_address TEXT
 );
 
-CREATE TABLE pixels (
+CREATE TABLE IF NOT EXISTS pixels (
     x INTEGER NOT NULL,
     y INTEGER NOT NULL,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -15,7 +15,7 @@ CREATE TABLE pixels (
     PRIMARY KEY (x, y)
 );
 
-CREATE TABLE userinfo (
+CREATE TABLE IF NOT EXISTS userinfo (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE COLLATE NOCASE CHECK(LENGTH(username) >= 3 AND LENGTH(username) <= 16),
     password TEXT NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE userinfo (
     creationsIDs TEXT DEFAULT '[]'
 );
 
-CREATE TABLE userdrawings (
+CREATE TABLE IF NOT EXISTS userdrawings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     piece_name TEXT NOT NULL CHECK(LENGTH(piece_name) >= 3 AND LENGTH(piece_name) <= 30),
     user_id INTEGER NOT NULL,
@@ -37,10 +37,10 @@ CREATE TABLE userdrawings (
     FOREIGN KEY (username) REFERENCES userinfo(username)
 );
 
-CREATE TABLE bannedIPs (
+CREATE TABLE IF NOT EXISTS bannedIPs (
     ip TEXT PRIMARY KEY,
     reason TEXT,
     banned_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ban_duration TEXT NOT NULL,
     ban_expires_at TIMESTAMP NOT NULL
-)
+);

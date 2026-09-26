@@ -1,8 +1,8 @@
 """
 utils_pixel_flush.py
 Owns the in-memory pixel state, the background flush thread, and the graceful
-shutdown hook.  Import this module once at startup (backend.py already does so
-via load_pixels_from_db / init_flush_thread) — everything else just touches
+shutdown hook. Import this module once at startup (backend.py already does so
+via load_pixels_from_db / init_flush_thread) - everything else just touches
 canvas_states directly.
 """
 import atexit
@@ -14,9 +14,7 @@ from config import CELL_SIDE_COUNT, SAVE_INTERVAL, DEFAULT_COLOUR
 from scripts import canvas_states
 from scripts.utils_misc import get_db_connection
 
-# ---------------------------------------------------------------------------
 # Pixel array loader
-# ---------------------------------------------------------------------------
 
 def load_pixel_array():
     """Populate canvas_states.pixelArray from the database."""
@@ -40,9 +38,7 @@ def load_pixel_array():
     return canvas_states.pixelArray
 
 
-# ---------------------------------------------------------------------------
 # Flush helpers
-# ---------------------------------------------------------------------------
 
 def flush_pending_updates():
     """Write all pending pixel updates to the database in one batch."""
@@ -77,10 +73,7 @@ def flush_pending_updates():
             conn.close()
 
 
-# ---------------------------------------------------------------------------
 # Background flush thread
-# ---------------------------------------------------------------------------
-
 _stop_thread = False
 _flush_thread: Thread | None = None
 

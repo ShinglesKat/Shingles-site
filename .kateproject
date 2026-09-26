@@ -1,0 +1,9 @@
+{
+    "name": "Shingles-site",
+    "files": [
+        {
+            "directory": ".",
+            "recursive": true
+        }
+    ]
+}
