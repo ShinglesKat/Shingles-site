@@ -25,9 +25,8 @@ async function fetchUserData(event) {
             <input type="hidden" id="editUserId" value="${user.id}">
             <label>Username:</label>
             <input type="text" id="editUsername" value="${user.username}"><br>
-            <label>Password:</label>
-            <input type="password" id="editPassword" value=""><br>  <!-- Empty password field -->
-            <input type="hidden" id="originalHashedPassword" value="${user.password}">
+            <label>New Password (leave blank to keep current):</label>
+            <input type="password" id="editPassword" value=""><br>
             <label>Account Type:</label>
             <input type="text" id="editUserType" value="${user.userType}"><br>
             <label>Created pixel drawing IDs:</label>
@@ -43,24 +42,15 @@ async function fetchUserData(event) {
 async function saveUserChanges() {
     const id = document.getElementById('editUserId').value;
     const username = document.getElementById('editUsername').value;
-    const password = document.getElementById('editPassword').value;
+    const newPassword = document.getElementById('editPassword').value;
     const userType = document.getElementById('editUserType').value;
     const userDrawings = document.getElementById('editDrawings').value;
-
-    const originalHashedPassword = document.getElementById('originalHashedPassword').value;
-    let hashed_password;
-
-    if (password !== "") {
-        hashed_password = await hashPassword(password);
-    } else {
-        hashed_password = originalHashedPassword;
-    }
 
     try {
         const response = await fetch('/admin/update_user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, username, hashed_password, userType, userDrawings })
+            body: JSON.stringify({ id, username, newPassword, userType, userDrawings })
         });
 
         const result = await response.json();

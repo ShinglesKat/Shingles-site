@@ -12,7 +12,7 @@ async function registerAccount(event) {
         const response = await fetch("/account/register_account", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })  // send raw password
+            body: JSON.stringify({ username, password })
         });
 
         if (response.ok) {

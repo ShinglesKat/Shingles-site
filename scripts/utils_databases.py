@@ -18,7 +18,6 @@ def _table_exists(connection, table_name):
 
 
 # Generic database initialiser
-
 def init_database(db_name, initialization_func=None, check_table=None):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     databases_dir = os.path.join(script_dir, '../databases')
@@ -69,7 +68,6 @@ def init_database(db_name, initialization_func=None, check_table=None):
 
 
 # Per-database init helpers
-
 def init_db():
     init_database('database.db', check_table='messages')
 

@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request, session
+from werkzeug.security import generate_password_hash
 
 from scripts.utils_misc import get_db_connection, parse_duration
 
@@ -76,16 +77,16 @@ def unban_ip():
         return jsonify({'error': f'Database operation failed: {str(e)}'}), 500
     finally:
         conn.close()
-        
+
 @admin_bp.route('/userinfo')
 def api_get_userinfo():
     user_id = request.args.get('id')
     username = request.args.get('username')
 
     if user_id:
-        query, param = "SELECT * FROM userinfo WHERE id = ?", (user_id,)
+        query, param = "SELECT id, username, userType, creationTime, creationsIDs FROM userinfo WHERE id = ?", (user_id,)
     elif username:
-        query, param = "SELECT * FROM userinfo WHERE username = ?", (username,)
+        query, param = "SELECT id, username, userType, creationTime, creationsIDs FROM userinfo WHERE username = ?", (username,)
     else:
         return jsonify({"error": "No user ID or username provided"}), 400
 
@@ -109,20 +110,29 @@ def update_user():
     data = request.get_json()
     user_id = data.get('id')
     new_username = data.get('username')
-    new_password = data.get('hashed_password')
+    new_password = (data.get('newPassword') or '').strip()
     new_type = data.get('userType')
     new_drawings = data.get('userDrawings')
 
-    if not all([user_id, new_username, new_password, new_type, new_drawings]):
+    if not all([user_id, new_username, new_type, new_drawings is not None]):
         return jsonify({"error": "Missing fields"}), 400
+
+    if new_password and len(new_password) < 6:
+        return jsonify({"error": "New password must be at least 6 characters!"}), 400
 
     conn = get_db_connection('userinfo.db')
     cursor = conn.cursor()
     try:
-        cursor.execute(
-            "UPDATE userinfo SET username = ?, password = ?, userType = ?, creationsIDs = ? WHERE id = ?",
-            (new_username, new_password, new_type, new_drawings, user_id),
-        )
+        if new_password:
+            cursor.execute(
+                "UPDATE userinfo SET username = ?, password = ?, userType = ?, creationsIDs = ? WHERE id = ?",
+                (new_username, generate_password_hash(new_password), new_type, new_drawings, user_id),
+            )
+        else:
+            cursor.execute(
+                "UPDATE userinfo SET username = ?, userType = ?, creationsIDs = ? WHERE id = ?",
+                (new_username, new_type, new_drawings, user_id),
+            )
         conn.commit()
         return jsonify({"status": "User updated successfully"})
     except sqlite3.Error as e:

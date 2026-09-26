@@ -1,4 +1,4 @@
-// ─── Logout ──────────────────────────────────────────────────────────────────
+//Logout
 
 function confirmLogout() {
     return confirm("Are you sure you want to log out?");
@@ -40,11 +40,11 @@ if (!window.logoutListenerAdded) {
     });
 }
 
-// ─── Session ─────────────────────────────────────────────────────────────────
-
-// undefined  = not yet fetched
-// null       = fetched but not logged in / error
-// object     = active session data
+/*Session
+* undefined  = not yet fetched
+* null       = fetched but not logged in / error
+* object     = active session data
+*/
 var sessionCache = undefined;
 
 async function getSessionData() {
@@ -70,19 +70,7 @@ async function getSessionData() {
     return sessionCache;
 }
 
-// ─── Password hashing ────────────────────────────────────────────────────────
-
-async function hashPassword(password) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-    return hashHex;
-}
-
-// ─── Ban user by IP ──────────────────────────────────────────────────────────
-
+//Ban user by IP
 function banUserByIp(ip) {
     if (!ip) {
         ip = prompt("Enter the IP to ban");
